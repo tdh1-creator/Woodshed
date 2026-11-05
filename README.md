@@ -34,6 +34,7 @@ On iPad, launch from the home-screen icon: Apple can clear storage for websites 
 - Tab sites like Ultimate Guitar and Songsterr usually block being shown inside another app, so links open in a new tab. Saving the page as a PDF and uploading it gives the best side-by-side experience.
 - PDFs render with PDF.js, loaded the first time you open a PDF and cached for offline use.
 - Playback speed is saved per video, and your last-used speed becomes the default for new videos.
+- **Pasting images:** copy a picture of tab or sheet music (long-press it → Copy, or take a screenshot and tap Copy), then tap the paste button in the sheet panel, or press Ctrl+V on Windows. JPG and PNG both work; PNG keeps thin tab lines sharper.
 - Typing `[1:23]` in a note (or tapping **Insert video time**) makes a tag that jumps the video to that moment.
 - Tap the timer to pause it. Practice time is added to the project's total.
 - The side panel (video, notes, bookmarks, takes) can be hidden with the panel button at the top right so the sheet music fills the screen. The video keeps playing while it's hidden.

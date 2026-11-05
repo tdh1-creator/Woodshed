@@ -20,7 +20,7 @@
 /* Layout: dark listening-room shell. Home is a track-list of projects; a project gives the sheet music the stage, with a slim rail (video, transport, notes/marks/takes) that can be hidden. */
 :root{
   --base:#000000; --panel:#121212; --raise:#1C1C1C; --hover:#2A2A2A; --line:#2A2A2A;
-  --ink:#FFFFFF; --muted:#A3A3A3; --dim:#6E6E6E; --accent:#2BD47D; --accent-ink:#04140B; --rec:#F0473C; --mark:rgba(43,212,125,.28);
+  --ink:#FFFFFF; --muted:#A3A3A3; --dim:#6E6E6E; --accent:#C9A12A; --accent-ink:#1A1404; --rec:#F0473C; --mark:rgba(201,161,42,.32);
   --f:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
   --r:10px; --r-sm:6px;
@@ -66,7 +66,7 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .label{font-size:12px;font-weight:700;color:var(--muted)}
 
 /* ---------- Home ---------- */
-#home{min-height:100%;background:linear-gradient(180deg,#1d2a22 0,var(--panel) 260px) var(--panel)}
+#home{min-height:100%;background:linear-gradient(180deg,#2e2712 0,var(--panel) 260px) var(--panel)}
 .wrap{max-width:1100px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .home-top{display:flex;align-items:center;gap:12px;padding-block:20px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin-right:auto}
@@ -230,6 +230,8 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 .err{color:var(--rec);font-size:13px;margin:0}
 .upload{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:var(--r);padding:22px;cursor:pointer;text-align:center;color:var(--muted);background:var(--raise)}
 .upload:hover{color:var(--ink);background:var(--hover)}
+.pastebox{display:flex;align-items:center;justify-content:center;gap:10px;min-height:56px;border-radius:var(--r);padding:12px;text-align:center;color:var(--muted);border:1.5px dashed var(--hover);outline:none;caret-color:transparent;font-size:13px}
+.pastebox:focus{border-color:var(--accent);color:var(--ink)}
 .divider{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
 
@@ -282,6 +284,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9M8 16h8"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-paste" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M5 20h14"/></symbol>
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></symbol>
 </svg>
@@ -424,6 +427,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
           <button class="btn icon sm" id="zoomFit" aria-label="Fit width"><svg class="i"><use href="#i-fit"/></svg></button>
           <button class="btn icon sm" id="zoomIn" aria-label="Zoom in"><svg class="i"><use href="#i-plus"/></svg></button>
         </div>
+        <button class="btn icon sm" id="pasteSheetBtn" aria-label="Paste copied image as sheet music" title="Paste copied image"><svg class="i"><use href="#i-paste"/></svg></button>
         <button class="btn icon sm" id="addSheetBtn" aria-label="Add sheet music" title="Add sheet music"><svg class="i"><use href="#i-plus"/></svg></button>
       </div>
       <div class="sheet-view" id="sheetView"></div>
@@ -469,6 +473,10 @@ input[type=range]{accent-color:var(--accent);width:100%}
       </section>
       <section data-step="3" hidden>
         <label class="upload" for="wFiles"><svg class="i"><use href="#i-upload"/></svg>Upload PDFs or images of the tab or score</label>
+        <div class="row">
+          <button class="btn sm outline" id="wPasteBtn"><svg class="i"><use href="#i-paste"/></svg>Paste copied image</button>
+          <div class="pastebox" id="wPasteBox" contenteditable="true" role="textbox" aria-label="Paste an image here" style="flex:1">or long-press here and tap Paste</div>
+        </div>
         <input type="file" id="wFiles" accept="application/pdf,image/*" multiple hidden>
         <div class="divider">or link to it</div>
         <input type="url" id="wLinkUrl" placeholder="https://… (Songsterr, Ultimate Guitar, a PDF link)" aria-label="Link to sheet music">
@@ -964,7 +972,10 @@ async function renderSheet(zoomOnly) {
   const token = ++S.renderToken;
   $$('.sheet-tools button').forEach((b) => (b.disabled = !s || s.kind === 'link'));
   if (!s) {
-    view.innerHTML = `<div class="view-empty"><p>No tab or sheet music yet.<br>Upload a PDF or image, or link to it.</p><button class="btn primary" onclick="openWizard(S.p,3)"><svg class="i"><use href="#i-plus"/></svg>Add sheet music</button></div>`;
+    view.innerHTML = `<div class="view-empty"><p>No tab or sheet music yet.<br>Copy an image of it and paste it here, or upload a PDF, image or link.</p>
+      <div class="row" style="justify-content:center;flex-wrap:wrap"><button class="btn primary" onclick="pasteIntoProject()"><svg class="i"><use href="#i-paste"/></svg>Paste image</button>
+      <button class="btn outline" onclick="openWizard(S.p,3)"><svg class="i"><use href="#i-plus"/></svg>Add</button></div>
+      <div class="pastebox" contenteditable="true" role="textbox" aria-label="Paste an image here" style="width:min(320px,100%)">or long-press here and tap Paste</div></div>`;
     return;
   }
   if (s.kind === 'link') {
@@ -1353,15 +1364,74 @@ $('#wVidAdd').onclick = () => addWVid(false);
 $('#wVidUrl').onkeydown = (e) => { if (e.key === 'Enter') addWVid(false); };
 $('#wVidList').onclick = (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; W.d.videos = W.d.videos.filter((v) => v.id !== b.dataset.rm); renderWVids(); };
 
-$('#wFiles').onchange = (e) => {
-  for (const f of e.target.files) {
+function wizAddFiles(files) {
+  for (const f of files) {
     const kind = f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? 'pdf' : f.type.startsWith('image/') ? 'image' : null;
     if (!kind) { toast(f.name + ' isn’t a PDF or image'); continue; }
     const s = { id: uid(), kind, name: f.name, label: f.name.replace(/\.[^.]+$/, ''), blobId: uid() };
     W.files.set(s.blobId, f); W.d.sheets.push(s);
   }
-  e.target.value = ''; renderWSheets();
+  renderWSheets();
+}
+$('#wFiles').onchange = (e) => { wizAddFiles(e.target.files); e.target.value = ''; };
+
+/* ---------------- Pasting copied images ---------------- */
+let pasteN = 0;
+function pastedName(type) {
+  pasteN++;
+  const ext = (type.split('/')[1] || 'png').replace('jpeg', 'jpg');
+  return `Pasted image ${dayFmt.format(new Date())} ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}${pasteN > 1 ? ' (' + pasteN + ')' : ''}.${ext}`;
+}
+function imagesFromEvent(e) {
+  const out = [];
+  for (const it of (e.clipboardData && e.clipboardData.items) || []) {
+    if (it.kind === 'file' && it.type.startsWith('image/')) { const f = it.getAsFile(); if (f) out.push(new File([f], pastedName(f.type), { type: f.type })); }
+  }
+  return out;
+}
+async function imagesFromClipboard() {
+  if (!navigator.clipboard || !navigator.clipboard.read) throw new Error('unsupported');
+  const out = [];
+  for (const item of await navigator.clipboard.read()) {
+    const type = item.types.find((t) => t.startsWith('image/'));
+    if (type) { const b = await item.getType(type); out.push(new File([b], pastedName(type), { type })); }
+  }
+  return out;
+}
+const PASTE_HELP = 'No image on the clipboard. Copy an image first (long-press it → Copy, or take a screenshot and tap Copy).';
+async function pasteIntoProject(files) {
+  if (!S.p) return;
+  if (!files) {
+    try { files = await imagesFromClipboard(); }
+    catch { toast('Long-press the box and tap Paste, or press Ctrl+V'); const b = document.querySelector('#sheetView .pastebox'); if (b) b.focus(); return; }
+  }
+  if (!files.length) { toast(PASTE_HELP); return; }
+  for (const f of files) {
+    const s = { id: uid(), kind: 'image', name: f.name, label: f.name.replace(/\.[^.]+$/, ''), blobId: uid() };
+    await putFile(s.blobId, f); S.p.sheets.push(s);
+  }
+  S.sIdx = S.p.sheets.length - 1; S.p.ui.s = S.sIdx;
+  await saveProject(S.p); askPersist(); renderSheetPanel();
+  toast(files.length > 1 ? `Added ${files.length} images` : 'Image added to sheet music');
+}
+$('#pasteSheetBtn').onclick = () => pasteIntoProject();
+$('#wPasteBtn').onclick = async () => {
+  try { const f = await imagesFromClipboard(); if (!f.length) { toast(PASTE_HELP); return; } wizAddFiles(f); }
+  catch { toast('Long-press the dashed box and tap Paste, or press Ctrl+V'); $('#wPasteBox').focus(); }
 };
+// Paste anywhere: into the wizard on the sheet-music step, or straight into an open project.
+document.addEventListener('paste', (e) => {
+  const files = imagesFromEvent(e);
+  const inBox = e.target.closest && e.target.closest('.pastebox');
+  if (inBox) e.preventDefault();
+  if (!files.length) { if (inBox) toast(PASTE_HELP); return; }
+  if ($('#wizard').open) { if (W.step === 3 || inBox) { e.preventDefault(); wizAddFiles(files); } return; }
+  if (document.querySelector('dialog[open]')) return;
+  const typing = /INPUT|TEXTAREA/.test(e.target.tagName) && !inBox;
+  if (S.p && !typing) { e.preventDefault(); pasteIntoProject(files); }
+});
+// Keep the paste boxes empty (they only exist to receive a paste).
+document.addEventListener('input', (e) => { if (e.target.classList && e.target.classList.contains('pastebox')) e.target.textContent = 'or long-press here and tap Paste'; });
 function addWLink() {
   let url = $('#wLinkUrl').value.trim(); if (!url) return;
   if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
