@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Woodshed</title>
+<meta name="description" content="Practice projects: video, tabs, notes and recordings in one place.">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Woodshed">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: dark listening-room shell. Home is a track-list of projects; a project gives the sheet music the stage, with a slim rail (video, transport, notes/marks/takes) that can be hidden. */
+:root{
+  --base:#000000; --panel:#121212; --raise:#1C1C1C; --hover:#2A2A2A; --line:#2A2A2A;
+  --ink:#FFFFFF; --muted:#A3A3A3; --dim:#6E6E6E; --accent:#2BD47D; --accent-ink:#04140B; --rec:#F0473C; --mark:rgba(43,212,125,.28);
+  --f:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --r:10px; --r-sm:6px;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--base);color:var(--ink);font:14px/1.45 var(--f);-webkit-font-smoothing:antialiased;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--base);z-index:30}
+[hidden]{display:none!important}
+img{max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+::selection{background:var(--mark)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.muted{color:var(--muted)}
+svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+/* buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 18px;border-radius:999px;border:0;
+  background:transparent;color:var(--ink);cursor:pointer;font-weight:700;white-space:nowrap;text-decoration:none;-webkit-tap-highlight-color:transparent;transition:transform .1s,background .15s,color .15s}
+.btn:hover{background:var(--hover)}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{background:var(--accent);filter:brightness(1.1)}
+.btn.outline{box-shadow:inset 0 0 0 1px var(--dim)}
+.btn.outline:hover{box-shadow:inset 0 0 0 1px var(--ink);background:transparent}
+.btn.danger{color:var(--rec)}
+.btn.sm{min-height:32px;padding:0 12px;font-size:13px}
+.btn.icon{width:40px;padding:0;color:var(--muted)}
+.btn.icon:hover{color:var(--ink)}
+.btn.icon.sm{width:32px}
+.btn[aria-pressed="true"]{color:var(--accent)}
+.btn:disabled{opacity:.35;cursor:default}
+.rec-dot{width:12px;height:12px;border-radius:50%;background:var(--rec);display:inline-block}
+input[type=text],input[type=url],input[type=search],select,textarea{width:100%;min-height:40px;padding:9px 12px;border-radius:var(--r-sm);border:0;background:var(--raise);outline:none}
+input:focus,textarea:focus,select:focus{box-shadow:inset 0 0 0 1px var(--muted)}
+textarea{resize:none;line-height:1.45}
+label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
+.row{display:flex;gap:8px;align-items:center}
+.row > input{flex:1 1 auto;min-width:0}
+.label{font-size:12px;font-weight:700;color:var(--muted)}
+
+/* ---------- Home ---------- */
+#home{min-height:100%;background:linear-gradient(180deg,#1d2a22 0,var(--panel) 260px) var(--panel)}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.home-top{display:flex;align-items:center;gap:12px;padding-block:20px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin-right:auto}
+.logo img{width:30px;height:30px;border-radius:7px}
+.home-top input{width:220px;border-radius:999px;padding-left:16px}
+.home-title{padding-block:28px 18px}
+.home-title h1{font-size:clamp(34px,6vw,56px);line-height:1;font-weight:800;letter-spacing:-.03em;margin:0}
+.home-title p{margin:8px 0 0;color:var(--muted)}
+.list-head,.proj{display:grid;grid-template-columns:44px minmax(0,1fr) 120px 90px;gap:14px;align-items:center;padding:8px 12px}
+.list-head{color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.list-head span:nth-child(3),.list-head span:nth-child(4),.proj .when,.proj .tot{text-align:right}
+.ledger{display:grid;gap:2px;padding-bottom:20px}
+.proj{width:100%;text-align:left;border:0;background:transparent;border-radius:var(--r-sm);cursor:pointer;color:var(--ink)}
+.proj:hover{background:var(--hover)}
+.art{width:44px;height:44px;border-radius:4px;display:grid;place-items:center;font-weight:800;font-size:18px;color:rgba(255,255,255,.92);
+  background:linear-gradient(135deg,hsl(var(--h) 55% 42%),hsl(calc(var(--h) + 40) 45% 22%))}
+.proj .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj .sub{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.proj .when,.proj .tot{color:var(--muted);font-size:13px}
+@media (max-width:560px){.list-head,.proj{grid-template-columns:44px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
+.empty{padding:48px 0;display:grid;gap:14px;justify-items:start}
+.empty h2{font-size:24px;margin:0;font-weight:700}
+.empty p{margin:0;max-width:46ch;color:var(--muted)}
+.storage-note{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding-block:20px 32px;color:var(--dim);font-size:13px}
+
+/* ---------- Project ---------- */
+#project{height:100%;display:flex;flex-direction:column;background:var(--base);
+  padding-left:max(8px,env(safe-area-inset-left,0px));padding-right:max(8px,env(safe-area-inset-right,0px))}
+.topbar{display:flex;align-items:center;gap:8px;height:56px;flex:none;padding:0 4px}
+.topbar .back{width:34px;height:34px;min-height:0;border-radius:50%;background:var(--panel);color:var(--ink)}
+.title-block{flex:1 1 auto;min-width:0;display:flex;align-items:baseline;gap:10px}
+.topbar h1{font-size:18px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pInstr{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.timer{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:0;background:var(--panel);cursor:pointer;color:var(--ink)}
+.timer .clock{font:500 14px/1 var(--f-mono)}
+.timer .tot{font-size:12px;color:var(--muted)}
+.timer .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
+.timer.paused .pulse{animation:none;background:var(--dim)}
+.timer.paused .clock{color:var(--muted)}
+@keyframes pulse{50%{opacity:.25}}
+@media (max-width:620px){.timer .tot,#pInstr{display:none}}
+
+.stage{flex:1;min-height:0;display:grid;grid-template-columns:340px minmax(0,1fr);gap:8px;padding-bottom:8px}
+.stage.rail-off{grid-template-columns:minmax(0,1fr)}
+.stage.rail-off .rail{display:none}
+.card{background:var(--panel);border-radius:var(--r);min-width:0;min-height:0}
+.rail{display:flex;flex-direction:column;gap:8px;min-height:0}
+
+/* video card */
+.vcard{padding:8px;display:grid;gap:8px}
+.vhead{display:flex;align-items:center;gap:4px;min-height:32px}
+.vhead select{flex:1;min-width:0;min-height:32px;padding:4px 8px;background:transparent;font-weight:700;font-size:13px}
+.vhead .one{flex:1;min-width:0;font-weight:700;font-size:13px;padding-left:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.player{position:relative;width:100%;aspect-ratio:16/9;background:#000;border-radius:var(--r-sm);overflow:hidden;max-width:100%}
+.player iframe,.player > div{position:absolute;inset:0;width:100%;height:100%;border:0}
+.transport{display:flex;align-items:center;gap:2px;flex-wrap:wrap}
+.transport .val{min-width:52px;text-align:center;font:500 13px var(--f-mono)}
+.transport .sep{width:1px;height:18px;background:var(--line);margin:0 6px}
+.transport .presets{display:flex}
+.transport .presets .btn{padding:0 7px;font-weight:500;color:var(--muted)}
+.transport .presets .btn[aria-pressed="true"]{color:var(--accent)}
+.loopline{display:flex;align-items:center;gap:2px;font-size:12px}
+.loopline .btn{font-weight:500;color:var(--muted);padding:0 9px}
+.loopline .btn[aria-pressed="true"]{color:var(--accent)}
+.loopline .range{margin-left:auto;color:var(--dim);font:12px var(--f-mono);padding-right:4px}
+.vempty{display:grid;gap:10px;justify-items:start;padding:8px 6px 6px;color:var(--muted)}
+
+/* tabs card */
+.tcard{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.tabs{display:flex;gap:6px;padding:10px 10px 6px;flex:none}
+.tabs button{border:0;border-radius:999px;background:var(--raise);color:var(--ink);padding:6px 12px;font-size:13px;font-weight:500;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--ink);color:#000}
+.tabs .count{opacity:.6;margin-left:4px;font-variant-numeric:tabular-nums}
+.tpane{flex:1;min-height:0;overflow:auto;padding:4px 10px 10px;display:flex;flex-direction:column;gap:8px}
+.compose{display:grid;gap:6px;background:var(--raise);border-radius:var(--r-sm);padding:4px}
+.compose textarea{background:transparent;min-height:36px;max-height:160px;padding:8px}
+.compose textarea:focus{box-shadow:none}
+.compose .row{justify-content:space-between;padding:0 2px 2px}
+.search{position:relative}
+.search input{min-height:32px;padding:4px 10px 4px 32px;font-size:13px;background:transparent}
+.search input:focus{background:var(--raise);box-shadow:none}
+.search svg{position:absolute;left:9px;top:8px;width:16px;height:16px;color:var(--muted)}
+.notes,.marks,.takes{list-style:none;margin:0;padding:0;display:grid}
+.notes li{padding:9px 4px;border-top:1px solid var(--line);display:grid;gap:2px}
+.notes li:first-child{border-top:0}
+.notes time{font-size:11px;color:var(--dim);display:flex;justify-content:space-between;gap:8px;align-items:center;font-variant-numeric:tabular-nums}
+.notes p{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px}
+.notes mark{background:var(--mark);color:inherit;border-radius:2px}
+.ttag{font:500 12px var(--f-mono);border:0;background:none;color:var(--accent);padding:0 2px;cursor:pointer}
+.linkish{border:0;background:none;color:var(--dim);cursor:pointer;font-size:11px;padding:2px 4px;opacity:0}
+li:hover .linkish,.linkish:focus-visible{opacity:1}
+@media (hover:none){.linkish{opacity:1}}
+.linkish:hover{color:var(--rec)}
+.marks li{display:flex;align-items:center;gap:6px;padding:4px;border-radius:var(--r-sm)}
+.marks li:hover{background:var(--hover)}
+.marks .t{font:500 12px var(--f-mono);min-width:46px;min-height:28px;border:0;background:none;color:var(--accent);cursor:pointer;text-align:left}
+.marks .lbl{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hintline{color:var(--dim);font-size:12px;padding:6px 4px}
+.takes{gap:6px}
+.take{display:grid;gap:6px;padding:8px;border-radius:var(--r-sm);background:var(--raise)}
+.take .meta{display:flex;align-items:center;gap:6px}
+.take input{min-height:28px;padding:2px 6px;flex:1 1 auto;background:transparent;font-weight:600;font-size:13px}
+.take audio{width:100%;height:36px}
+.take video{width:100%;max-width:100%;border-radius:4px;background:#000}
+.take .foot{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--dim)}
+.kind{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* sheet card */
+.scard{display:flex;flex-direction:column;overflow:hidden;position:relative}
+.shead{display:flex;align-items:center;gap:4px;padding:6px 8px;flex:none}
+.shead select{width:auto;max-width:100%;min-height:32px;padding:4px 8px;background:transparent;font-weight:700;font-size:13px}
+.shead .one{font-weight:700;font-size:13px;padding-left:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.shead .spacer{flex:1}
+.sheet-view{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
+.pdf-pages{display:grid;gap:8px;padding:0 8px 8px;justify-items:center}
+.pdf-pages canvas{background:#fff;border-radius:2px;max-width:none}
+.img-wrap{padding:0 8px 8px;display:flex;justify-content:center}
+.img-wrap img{max-width:none;background:#fff;border-radius:2px}
+.link-card{margin:24px auto;max-width:520px;padding:24px;display:grid;gap:12px}
+.link-card .host{font-size:28px;font-weight:800;letter-spacing:-.02em;overflow-wrap:anywhere}
+.link-card .url{font:12px var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+.link-card .hint{color:var(--dim);font-size:13px;margin:0}
+.link-frame{width:100%;height:100%;border:0;background:#fff}
+.view-empty{display:grid;place-items:center;align-content:center;height:100%;min-height:240px;padding:24px;text-align:center;color:var(--muted);gap:14px}
+.view-empty p{margin:0}
+
+@media (max-width:760px){
+  #project{height:auto;min-height:100%}
+  .stage{grid-template-columns:minmax(0,1fr)}
+  .tcard{max-height:60vh}
+  .scard{height:75vh}
+}
+
+/* ---------- Dialogs ---------- */
+dialog{border:0;padding:0;border-radius:12px;background:#181818;color:var(--ink);width:min(620px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-shadow:0 24px 80px rgba(0,0,0,.6)}
+dialog::backdrop{background:rgba(0,0,0,.7)}
+.dlg{display:flex;flex-direction:column;max-height:calc(100dvh - 24px)}
+.dlg header{padding:20px 20px 10px;display:grid;gap:14px}
+.dlg header .row{justify-content:space-between}
+.dlg h2{font-size:24px;font-weight:800;letter-spacing:-.02em;margin:0}
+.dlg .body{padding:6px 20px 20px;overflow:auto;display:grid;gap:14px;align-content:start}
+.dlg footer{padding:12px 20px 18px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.dlg footer .spacer{flex:1}
+.steps{display:flex;gap:4px;list-style:none;margin:0;padding:0}
+.steps li{flex:1}
+.steps button{width:100%;border:0;background:none;padding:0;cursor:pointer;display:grid;gap:6px;text-align:left;color:var(--dim);font-size:12px;font-weight:700}
+.steps button::before{content:"";height:3px;border-radius:2px;background:var(--hover)}
+.steps button.done::before{background:var(--muted)}
+.steps button[aria-current="step"]{color:var(--ink)}
+.steps button[aria-current="step"]::before{background:var(--accent)}
+.instr{display:flex;flex-wrap:wrap;gap:6px}
+.instr button{min-height:32px;padding:0 14px;border-radius:999px;border:0;background:var(--raise);cursor:pointer;font-size:13px}
+.instr button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);font-weight:700}
+.items{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.items li{display:flex;align-items:center;gap:10px;padding:6px 6px 6px 10px;border-radius:var(--r-sm);min-width:0}
+.items li:hover{background:var(--hover)}
+.items .what{flex:1;min-width:0;display:grid}
+.items .what span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600}
+.items .what small{color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.err{color:var(--rec);font-size:13px;margin:0}
+.upload{display:flex;align-items:center;justify-content:center;gap:10px;border-radius:var(--r);padding:22px;cursor:pointer;text-align:center;color:var(--muted);background:var(--raise)}
+.upload:hover{color:var(--ink);background:var(--hover)}
+.divider{display:flex;align-items:center;gap:10px;color:var(--dim);font-size:12px}
+.divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
+
+.rec-stage{display:grid;gap:14px;justify-items:center;text-align:center}
+.rec-stage video{width:100%;max-height:50vh;border-radius:var(--r-sm);background:#000}
+.rec-clock{font:500 44px/1 var(--f-mono);font-variant-numeric:tabular-nums}
+.rec-clock.live{color:var(--rec)}
+.seg{display:inline-flex;background:var(--raise);border-radius:999px;padding:3px;gap:3px}
+.seg button{min-height:32px;padding:0 16px;border-radius:999px;border:0;background:transparent;cursor:pointer;font-weight:600;font-size:13px}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#000}
+.meter{width:100%;height:4px;border-radius:999px;background:var(--hover);overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--accent);transition:width .08s linear}
+
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--accent);color:var(--accent-ink);padding:10px 18px;border-radius:8px;z-index:100;font-weight:700;max-width:calc(100vw - 32px)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+
+/* metronome */
+.metro-pop{position:fixed;top:calc(56px + env(safe-area-inset-top,0px));right:max(12px,env(safe-area-inset-right,0px));width:min(290px,calc(100vw - 24px));
+  background:#181818;border-radius:12px;box-shadow:0 18px 60px rgba(0,0,0,.6);padding:16px;z-index:40;display:grid;gap:14px}
+.metro-beats{display:flex;justify-content:center;gap:10px;height:16px;align-items:center}
+.metro-beats i{width:10px;height:10px;border-radius:50%;background:var(--hover);transition:background .05s,transform .05s}
+.metro-beats i.first{width:14px;height:14px}
+.metro-beats i.on{background:var(--accent);transform:scale(1.15)}
+.metro-bpm{display:flex;align-items:center;justify-content:space-between}
+.metro-bpm .big{font-size:44px;font-weight:500;line-height:1}
+.metro-bpm .unit{font-size:12px;color:var(--muted);margin-left:6px;font-weight:700}
+.metro-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.metro-row input[type=range]{flex:1;max-width:170px}
+input[type=range]{accent-color:var(--accent);width:100%}
+.seg.sm button{min-height:28px;padding:0 10px;font-size:12px}
+#metroBtn.running{color:var(--accent)}
+#metroBtn.running svg{animation:pulse 1s ease-in-out infinite}
+.recopts{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--muted)}
+.recopts label{display:flex;align-items:center;gap:6px;cursor:pointer}
+.recopts input{accent-color:var(--accent);width:16px;height:16px}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16v4z"/></symbol>
+  <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0014 0M12 18v3"/></symbol>
+  <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-layout" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></symbol>
+  <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
+  <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9M8 16h8"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M5 20h14"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></symbol>
+</svg>
+
+<!-- ================= HOME ================= -->
+<main id="home">
+  <div class="wrap">
+    <div class="home-top">
+      <div class="logo"><img src="icons/icon-192.png" alt="">Woodshed</div>
+      <input type="search" id="projSearch" placeholder="Search projects" aria-label="Search projects">
+      <button class="btn primary" id="newProjBtn"><svg class="i"><use href="#i-plus"/></svg>New</button>
+    </div>
+    <div class="home-title">
+      <h1>Your projects</h1>
+      <p id="homeSub"></p>
+    </div>
+    <div class="list-head" id="listHead"><span></span><span>Title</span><span>Last opened</span><span>Practiced</span></div>
+    <section class="ledger" id="ledger" aria-label="Projects"></section>
+    <div class="empty" id="emptyHome" hidden>
+      <h2>Start your first project</h2>
+      <p>Add a YouTube video of the song and the tab or sheet music. Your notes, bookmarks and recorded takes live with it.</p>
+      <button class="btn primary" id="newProjBtn2"><svg class="i"><use href="#i-plus"/></svg>New project</button>
+    </div>
+    <footer class="storage-note">
+      <span id="storageLine">Projects are saved on this device.</span>
+      <span class="row">
+        <button class="btn sm outline" id="exportBtn">Back up</button>
+        <label class="btn sm outline" for="importFile">Restore</label>
+        <input type="file" id="importFile" accept="application/json,.json" hidden>
+      </span>
+    </footer>
+  </div>
+</main>
+
+<!-- ================= PROJECT ================= -->
+<main id="project" hidden>
+  <div class="topbar">
+    <button class="btn back" id="backBtn" aria-label="Back to projects"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="title-block"><h1 id="pTitle"></h1><span id="pInstr"></span></div>
+    <button class="timer" id="timerBtn" title="Tap to pause or resume the practice timer">
+      <span class="pulse"></span><span class="clock" id="timerClock">0:00:00</span><span class="tot" id="timerTotal"></span>
+    </button>
+    <button class="btn icon" id="metroBtn" aria-label="Metronome" title="Metronome" aria-pressed="false"><svg class="i"><use href="#i-metro"/></svg></button>
+    <button class="btn icon" id="recBtn" aria-label="Record a take" title="Record a take"><span class="rec-dot"></span></button>
+    <button class="btn icon" id="editBtn" aria-label="Edit project" title="Edit project"><svg class="i"><use href="#i-edit"/></svg></button>
+    <button class="btn icon" id="layoutBtn" aria-label="Hide or show the side panel" title="Side panel" aria-pressed="true"><svg class="i"><use href="#i-layout"/></svg></button>
+  </div>
+
+  <div class="metro-pop" id="metroPop" hidden>
+    <div class="metro-beats" id="metroBeats"></div>
+    <div class="metro-bpm">
+      <button class="btn icon" id="bpmDown" aria-label="Slower"><svg class="i"><use href="#i-minus"/></svg></button>
+      <div><span class="big mono" id="bpmVal">90</span><span class="unit">BPM</span></div>
+      <button class="btn icon" id="bpmUp" aria-label="Faster"><svg class="i"><use href="#i-plus"/></svg></button>
+    </div>
+    <input type="range" id="bpmRange" min="30" max="260" value="90" aria-label="Tempo">
+    <div class="metro-row">
+      <span class="label">Beats</span>
+      <div class="seg sm" id="metroSig" role="group" aria-label="Beats per bar"></div>
+    </div>
+    <div class="metro-row">
+      <span class="label">Volume</span>
+      <input type="range" id="metroVol" min="0" max="1" step="0.05" value="0.7" aria-label="Metronome volume">
+    </div>
+    <div class="metro-row">
+      <button class="btn sm outline" id="tapBtn">Tap tempo</button>
+      <button class="btn primary" id="metroToggle">Start</button>
+    </div>
+  </div>
+
+  <section class="stage" id="stage">
+    <aside class="rail">
+      <div class="card vcard">
+        <div class="vhead">
+          <select id="videoSelect" aria-label="Choose video" hidden></select>
+          <span class="one" id="videoOne"></span>
+          <button class="btn icon sm" id="addVideoBtn" aria-label="Add video" title="Add video"><svg class="i"><use href="#i-plus"/></svg></button>
+        </div>
+        <div id="videoBody">
+          <div class="player"><div id="yt"></div></div>
+          <div class="transport" style="margin-top:6px">
+            <button class="btn icon sm" id="rateDown" aria-label="Slower"><svg class="i"><use href="#i-minus"/></svg></button>
+            <span class="val" id="rateVal" title="Playback speed, saved for this video">1.00×</span>
+            <button class="btn icon sm" id="rateUp" aria-label="Faster"><svg class="i"><use href="#i-plus"/></svg></button>
+            <span class="sep"></span>
+            <div class="presets" id="ratePresets"></div>
+          </div>
+          <div class="loopline">
+            <button class="btn sm" id="setA">A</button>
+            <button class="btn sm" id="setB">B</button>
+            <button class="btn sm" id="loopToggle" aria-pressed="false">Loop</button>
+            <button class="btn sm" id="loopClear">Clear</button>
+            <span class="range" id="loopRange"></span>
+          </div>
+        </div>
+        <div class="vempty" id="videoEmpty" hidden>
+          <span>No video yet.</span>
+          <button class="btn sm primary" id="addVideoBtn2"><svg class="i"><use href="#i-plus"/></svg>Add YouTube link</button>
+        </div>
+      </div>
+
+      <div class="card tcard">
+        <div class="tabs" role="tablist">
+          <button role="tab" data-tab="notes" aria-selected="true">Notes<span class="count" id="cNotes"></span></button>
+          <button role="tab" data-tab="marks" aria-selected="false">Bookmarks<span class="count" id="cMarks"></span></button>
+          <button role="tab" data-tab="takes" aria-selected="false">Takes<span class="count" id="cTakes"></span></button>
+        </div>
+        <div class="tpane" data-pane="notes">
+          <div class="compose">
+            <textarea id="noteText" rows="1" placeholder="Add a practice note…" aria-label="New note"></textarea>
+            <div class="row">
+              <button class="btn sm" id="tagTime" title="Insert the current video time" style="color:var(--muted);font-weight:500">+ video time</button>
+              <button class="btn sm primary" id="saveNote">Add</button>
+            </div>
+          </div>
+          <div class="search"><svg class="i"><use href="#i-search"/></svg><input type="search" id="noteSearch" placeholder="Search notes" aria-label="Search notes"></div>
+          <ul class="notes" id="notes"></ul>
+        </div>
+        <div class="tpane" data-pane="marks" hidden>
+          <div class="row">
+            <input type="text" id="markLabel" placeholder="Label, e.g. Solo" aria-label="Bookmark label">
+            <button class="btn sm primary" id="addMark"><span id="addMarkLbl">Mark 0:00</span></button>
+          </div>
+          <ul class="marks" id="marks"></ul>
+        </div>
+        <div class="tpane" data-pane="takes" hidden>
+          <button class="btn sm outline" id="recBtn2" style="justify-self:start;align-self:flex-start"><span class="rec-dot" style="width:9px;height:9px"></span>New take</button>
+          <ul class="takes" id="takes"></ul>
+        </div>
+      </div>
+    </aside>
+
+    <div class="card scard">
+      <div class="shead">
+        <select id="sheetSelect" aria-label="Choose sheet" hidden></select>
+        <span class="one" id="sheetOne"></span>
+        <span class="spacer"></span>
+        <div class="sheet-tools row" style="gap:0">
+          <button class="btn icon sm" id="zoomOut" aria-label="Zoom out"><svg class="i"><use href="#i-minus"/></svg></button>
+          <button class="btn icon sm" id="zoomFit" aria-label="Fit width"><svg class="i"><use href="#i-fit"/></svg></button>
+          <button class="btn icon sm" id="zoomIn" aria-label="Zoom in"><svg class="i"><use href="#i-plus"/></svg></button>
+        </div>
+        <button class="btn icon sm" id="addSheetBtn" aria-label="Add sheet music" title="Add sheet music"><svg class="i"><use href="#i-plus"/></svg></button>
+      </div>
+      <div class="sheet-view" id="sheetView"></div>
+    </div>
+  </section>
+</main>
+
+<!-- ================= WIZARD ================= -->
+<dialog id="wizard" aria-labelledby="wizTitle">
+  <div class="dlg">
+    <header>
+      <div class="row">
+        <h2 id="wizTitle">New project</h2>
+        <button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+      <ol class="steps" id="wizSteps"></ol>
+    </header>
+    <div class="body">
+      <section data-step="0">
+        <label class="field">Project name
+          <input type="text" id="wName" placeholder="e.g. Blackbird, fingerstyle" autocomplete="off">
+        </label>
+        <p class="err" id="wNameErr" hidden>Give the project a name to continue.</p>
+      </section>
+      <section data-step="1" hidden>
+        <p class="hint">Pick every instrument this project covers.</p>
+        <div class="instr" id="wInstr"></div>
+        <div class="row">
+          <input type="text" id="wInstrCustom" placeholder="Another instrument" aria-label="Another instrument">
+          <button class="btn sm" id="wInstrAdd">Add</button>
+        </div>
+      </section>
+      <section data-step="2" hidden>
+        <label class="field">YouTube link
+          <input type="url" id="wVidUrl" placeholder="https://www.youtube.com/watch?v=…" autocomplete="off">
+        </label>
+        <div class="row">
+          <input type="text" id="wVidLabel" placeholder="Label (optional), e.g. Lesson, Live version" aria-label="Video label">
+          <button class="btn sm primary" id="wVidAdd">Add video</button>
+        </div>
+        <p class="err" id="wVidErr" hidden>That doesn't look like a YouTube link. Paste the address from the YouTube share button.</p>
+        <ul class="items" id="wVidList"></ul>
+      </section>
+      <section data-step="3" hidden>
+        <label class="upload" for="wFiles"><svg class="i"><use href="#i-upload"/></svg>Upload PDFs or images of the tab or score</label>
+        <input type="file" id="wFiles" accept="application/pdf,image/*" multiple hidden>
+        <div class="divider">or link to it</div>
+        <input type="url" id="wLinkUrl" placeholder="https://… (Songsterr, Ultimate Guitar, a PDF link)" aria-label="Link to sheet music">
+        <div class="row">
+          <input type="text" id="wLinkLabel" placeholder="Label (optional)" aria-label="Link label">
+          <button class="btn sm primary" id="wLinkAdd">Add link</button>
+        </div>
+        <ul class="items" id="wSheetList"></ul>
+      </section>
+    </div>
+    <footer>
+      <button class="btn danger" id="wDelete" hidden>Delete project</button>
+      <span class="spacer"></span>
+      <button class="btn" id="wBack">Back</button>
+      <button class="btn outline" id="wNext">Next</button>
+      <button class="btn primary" id="wSave">Save project</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- ================= RECORDER ================= -->
+<dialog id="recorder" aria-labelledby="recTitle">
+  <div class="dlg">
+    <header>
+      <div class="row">
+        <h2 id="recTitle">Record a take</h2>
+        <button class="btn icon ghost" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+      </div>
+    </header>
+    <div class="body">
+      <div class="rec-stage">
+        <div class="seg" role="group" aria-label="Recording type">
+          <button id="recAudio" aria-pressed="true">Audio</button>
+          <button id="recVideo" aria-pressed="false">Video</button>
+        </div>
+        <video id="recPreview" playsinline muted hidden></video>
+        <div class="rec-clock" id="recClock">0:00</div>
+        <div class="meter" aria-hidden="true"><i id="recMeter"></i></div>
+        <div class="recopts" id="recOpts">
+          <label><input type="checkbox" id="recClick"> Metronome during take</label>
+          <label><input type="checkbox" id="recCountIn"> Count in one bar</label>
+        </div>
+        <p class="hint" id="recHint">Tip: start the backing video first if you want to play along. Headphones keep it out of the take.</p>
+        <p class="err" id="recErr" hidden></p>
+        <div id="recReview" hidden style="width:100%;display:grid;gap:10px"></div>
+      </div>
+    </div>
+    <footer>
+      <span class="spacer"></span>
+      <button class="btn outline" id="recDiscard" hidden>Discard</button>
+      <button class="btn primary" id="recStart"><span class="rec-dot"></span>Start recording</button>
+      <button class="btn primary" id="recStop" hidden>Stop</button>
+      <button class="btn primary" id="recSave" hidden>Save take</button>
+    </footer>
+  </div>
+</dialog>
+
+<!-- ================= CONFIRM ================= -->
+<dialog id="confirmDlg" style="width:min(420px,calc(100vw - 24px))">
+  <div class="dlg">
+    <header><h2 id="confirmMsg" style="font-size:20px"></h2></header>
+    <div class="body"><p class="hint" id="confirmSub"></p></div>
+    <footer><span class="spacer"></span><button class="btn outline" id="confirmNo">Cancel</button><button class="btn primary" id="confirmYes" style="background:var(--rec);color:#fff">Delete</button></footer>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   Woodshed — music practice PWA
+   Storage: IndexedDB ("projects" + "blobs"). Files kept as ArrayBuffers for iPad reliability.
+   ========================================================= */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const uid = () => (self.crypto && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const LS = {
+  get(k, d) { try { const v = localStorage.getItem('ws.' + k); return v == null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem('ws.' + k, JSON.stringify(v)); } catch {} }
+};
+function fmtTime(sec) {
+  sec = Math.max(0, Math.floor(sec || 0));
+  const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return (h ? h + ':' + String(m).padStart(2, '0') : m) + ':' + String(s).padStart(2, '0');
+}
+function fmtClock(sec) {
+  sec = Math.floor(sec); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
+  return h + ':' + String(m).padStart(2, '0') + ':' + String(s).padStart(2, '0');
+}
+function fmtDur(sec) {
+  sec = Math.floor(sec || 0); const h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60);
+  if (h) return h + 'h ' + m + 'm'; if (m) return m + 'm'; return sec + 's';
+}
+function parseTime(str) { const p = str.split(':').map(Number); return p.reduce((a, n) => a * 60 + n, 0); }
+const dateFmt = new Intl.DateTimeFormat(undefined, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
+const dayFmt = new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' });
+function relDay(ts) {
+  if (!ts) return 'Not opened yet';
+  const d = new Date(ts), now = new Date();
+  const days = Math.round((new Date(now.toDateString()) - new Date(d.toDateString())) / 864e5);
+  if (days === 0) return 'Today'; if (days === 1) return 'Yesterday'; if (days < 7) return days + ' days ago';
+  return dayFmt.format(d);
+}
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 2600);
+}
+function confirmBox(msg, sub = '', yes = 'Delete') {
+  const d = $('#confirmDlg');
+  $('#confirmMsg').textContent = msg; $('#confirmSub').textContent = sub; $('#confirmYes').textContent = yes;
+  d.showModal();
+  return new Promise((res) => {
+    const done = (v) => { d.close(); $('#confirmYes').onclick = $('#confirmNo').onclick = null; res(v); };
+    $('#confirmYes').onclick = () => done(true);
+    $('#confirmNo').onclick = () => done(false);
+    d.oncancel = () => done(false);
+  });
+}
+
+/* ---------------- IndexedDB ---------------- */
+const DB = {
+  db: null,
+  open() {
+    return new Promise((res, rej) => {
+      const r = indexedDB.open('woodshed', 1);
+      r.onupgradeneeded = () => {
+        const d = r.result;
+        if (!d.objectStoreNames.contains('projects')) d.createObjectStore('projects', { keyPath: 'id' });
+        if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs', { keyPath: 'id' });
+      };
+      r.onsuccess = () => { this.db = r.result; res(); };
+      r.onerror = () => rej(r.error);
+    });
+  },
+  run(store, mode, fn) {
+    return new Promise((res, rej) => {
+      const t = this.db.transaction(store, mode); const q = fn(t.objectStore(store));
+      t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
+    });
+  },
+  all(s) { return this.run(s, 'readonly', (st) => st.getAll()); },
+  get(s, id) { return this.run(s, 'readonly', (st) => st.get(id)); },
+  put(s, v) { return this.run(s, 'readwrite', (st) => st.put(v)); },
+  del(s, id) { return this.run(s, 'readwrite', (st) => st.delete(id)); }
+};
+async function putFile(id, fileOrBlob, name) {
+  const buf = await fileOrBlob.arrayBuffer();
+  await DB.put('blobs', { id, type: fileOrBlob.type || 'application/octet-stream', name: name || fileOrBlob.name || '', buf });
+}
+const urlCache = new Map();
+async function blobUrl(id) {
+  if (urlCache.has(id)) return urlCache.get(id);
+  const rec = await DB.get('blobs', id); if (!rec) return null;
+  const u = URL.createObjectURL(new Blob([rec.buf], { type: rec.type }));
+  urlCache.set(id, u); return u;
+}
+function releaseUrls() { urlCache.forEach((u) => URL.revokeObjectURL(u)); urlCache.clear(); }
+async function saveProject(p) { p.updatedAt = Date.now(); await DB.put('projects', p); }
+let persistAsked = false;
+async function askPersist() {
+  if (persistAsked) return; persistAsked = true;
+  try { if (navigator.storage && navigator.storage.persist) await navigator.storage.persist(); } catch {}
+}
+
+/* ---------------- YouTube ---------------- */
+function ytId(url) {
+  if (!url) return null; url = url.trim();
+  if (/^[\w-]{11}$/.test(url)) return url;
+  try {
+    const u = new URL(url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1, 12) || null;
+    if (u.hostname.includes('youtube')) {
+      if (u.searchParams.get('v')) return u.searchParams.get('v').slice(0, 11);
+      const m = u.pathname.match(/\/(embed|shorts|live|v)\/([\w-]{11})/); if (m) return m[2];
+    }
+  } catch {}
+  return null;
+}
+let ytReady = null;
+function loadYT() {
+  if (ytReady) return ytReady;
+  ytReady = new Promise((res, rej) => {
+    if (window.YT && YT.Player) return res();
+    window.onYouTubeIframeAPIReady = () => res();
+    const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api';
+    s.onerror = () => { ytReady = null; rej(new Error('YouTube could not load')); };
+    document.head.appendChild(s);
+  });
+  return ytReady;
+}
+
+/* ---------------- PDF.js (loaded only when a PDF is opened) ---------------- */
+const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
+let pdfReady = null;
+function loadPdf() {
+  if (pdfReady) return pdfReady;
+  pdfReady = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = PDFJS + 'pdf.min.js';
+    s.onload = () => { pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS + 'pdf.worker.min.js'; res(pdfjsLib); };
+    s.onerror = () => { pdfReady = null; rej(new Error('PDF viewer could not load')); };
+    document.head.appendChild(s);
+  });
+  return pdfReady;
+}
+
+/* =========================================================
+   State
+   ========================================================= */
+const S = {
+  projects: [], p: null,
+  player: null, vIdx: 0, needRate: false, pollT: null,
+  sIdx: 0, zoom: 1, renderToken: 0, pdfDoc: null, lastW: 0,
+  sessionStart: 0, sessionAccum: 0, paused: false, unsaved: 0, tickT: null,
+  noteQuery: ''
+};
+const PRESETS = [0.5, 0.75, 0.9, 1];
+const INSTRUMENTS = ['Electric guitar', 'Acoustic guitar', 'Classical guitar', 'Bass', 'Ukulele', 'Mandolin', 'Banjo', 'Piano', 'Keyboard', 'Drums', 'Voice', 'Violin', 'Cello', 'Saxophone', 'Trumpet', 'Flute', 'Harmonica'];
+
+/* =========================================================
+   Home
+   ========================================================= */
+async function loadProjects() {
+  S.projects = (await DB.all('projects')).sort((a, b) => (b.lastOpened || b.updatedAt) - (a.lastOpened || a.updatedAt));
+}
+function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+function renderHome() {
+  const q = $('#projSearch').value.trim().toLowerCase();
+  const list = S.projects.filter((p) => !q || p.name.toLowerCase().includes(q) || (p.instruments || []).some((i) => i.toLowerCase().includes(q)));
+  const n = S.projects.length;
+  $('#emptyHome').hidden = n > 0; $('#listHead').hidden = n === 0;
+  const total = S.projects.reduce((t, p) => t + (p.totalSeconds || 0), 0);
+  $('#homeSub').textContent = n ? `${n} project${n === 1 ? '' : 's'}${total ? ' · ' + fmtDur(total) + ' practiced' : ''}` : '';
+  const plural = (k, w) => k ? `${k} ${w}${k === 1 ? '' : 's'}` : '';
+  $('#ledger').innerHTML = list.map((p) => {
+    const sub = [(p.instruments || []).join(', '), plural(p.videos.length, 'video'), plural(p.sheets.length, 'sheet'), plural(p.recordings.length, 'take')].filter(Boolean).join(' · ');
+    return `<button class="proj" data-id="${esc(p.id)}">
+      <span class="art" style="--h:${hue(p.name)}">${esc((p.name.trim()[0] || '♪').toUpperCase())}</span>
+      <span style="min-width:0;display:grid"><span class="name">${esc(p.name)}</span><span class="sub">${esc(sub || 'Empty project')}</span></span>
+      <span class="when">${relDay(p.lastOpened)}</span>
+      <span class="tot mono">${p.totalSeconds ? fmtDur(p.totalSeconds) : '–'}</span>
+    </button>`;
+  }).join('') || (n ? `<p class="muted" style="padding:12px">No project matches “${esc(q)}”.</p>` : '');
+  updateStorageLine();
+}
+async function updateStorageLine() {
+  try {
+    const e = await navigator.storage.estimate();
+    const mb = (e.usage / 1048576);
+    $('#storageLine').textContent = `Saved on this device · ${mb < 1 ? '<1' : mb.toFixed(0)} MB used`;
+  } catch {}
+}
+$('#ledger').addEventListener('click', (e) => { const b = e.target.closest('.proj'); if (b) location.hash = 'p-' + b.dataset.id; });
+$('#projSearch').addEventListener('input', renderHome);
+$('#newProjBtn').onclick = $('#newProjBtn2').onclick = () => openWizard(null, 0);
+
+/* =========================================================
+   Routing
+   ========================================================= */
+async function route() {
+  const m = location.hash.match(/^#p-(.+)$/);
+  if (m) {
+    const p = await DB.get('projects', decodeURIComponent(m[1]));
+    if (p) return openProject(p);
+    location.hash = '';
+  }
+  await closeProject();
+  await loadProjects();
+  $('#project').hidden = true; $('#home').hidden = false;
+  renderHome();
+}
+window.addEventListener('hashchange', route);
+
+/* =========================================================
+   Project view
+   ========================================================= */
+async function openProject(p) {
+  if (S.p && S.p.id !== p.id) await closeProject();
+  const fresh = !S.p;
+  S.p = p;
+  p.ui = p.ui || { v: 0, s: 0 };
+  $('#home').hidden = true; $('#project').hidden = false;
+  if (fresh) {
+    p.lastOpened = Date.now(); await saveProject(p);
+    startTimer(); window.scrollTo(0, 0);
+  }
+  renderHeader();
+  S.vIdx = Math.min(p.ui.v || 0, Math.max(0, p.videos.length - 1));
+  S.sIdx = Math.min(p.ui.s || 0, Math.max(0, p.sheets.length - 1));
+  renderVideoPanel(); renderSheetPanel(); renderNotes(); renderTakes(); loadProjectMetro(p);
+}
+async function closeProject() {
+  if (!S.p) return;
+  stopTimer(true); metroStop(); $('#metroPop').hidden = true;
+  try { S.player && S.player.stopVideo && S.player.stopVideo(); } catch {}
+  clearInterval(S.pollT);
+  await saveProject(S.p);
+  S.p = null; S.pdfDoc = null; S.renderToken++;
+  $('#sheetView').innerHTML = '';
+  releaseUrls();
+}
+function renderHeader() {
+  const p = S.p;
+  $('#pTitle').textContent = p.name;
+  document.title = p.name + ' · Woodshed';
+  $('#pInstr').textContent = (p.instruments || []).join(', ');
+  const off = !!LS.get('railOff', false);
+  $('#stage').classList.toggle('rail-off', off); $('#layoutBtn').setAttribute('aria-pressed', !off);
+}
+$('#backBtn').onclick = () => { location.hash = ''; };
+$('#editBtn').onclick = () => openWizard(S.p, 0);
+$('#layoutBtn').onclick = () => {
+  const off = !LS.get('railOff', false); LS.set('railOff', off);
+  $('#stage').classList.toggle('rail-off', off); $('#layoutBtn').setAttribute('aria-pressed', !off);
+  S.lastW = 0; renderSheet(true);
+};
+
+/* ---------------- Timer ---------------- */
+function startTimer() {
+  S.sessionStart = Date.now(); S.sessionAccum = 0; S.paused = false; S.unsaved = 0; lastPersist = 0;
+  $('#timerBtn').classList.remove('paused');
+  clearInterval(S.tickT); S.tickT = setInterval(tick, 1000); tick();
+}
+function elapsed() { return S.sessionAccum + (S.paused ? 0 : (Date.now() - S.sessionStart) / 1000); }
+let lastPersist = 0;
+function tick() {
+  if (!S.p) return;
+  const e = elapsed();
+  $('#timerClock').textContent = fmtClock(e);
+  $('#timerTotal').textContent = fmtDur((S.p.totalSeconds || 0) + e - lastPersist) + ' total';
+  if (e - lastPersist >= 30) persistTime();
+}
+function persistTime() {
+  const e = elapsed(); S.p.totalSeconds = (S.p.totalSeconds || 0) + (e - lastPersist); lastPersist = e; saveProject(S.p);
+}
+function stopTimer(final) {
+  if (final) { persistTime(); lastPersist = 0; }
+  clearInterval(S.tickT);
+}
+$('#timerBtn').onclick = () => {
+  if (S.paused) { S.sessionStart = Date.now(); S.paused = false; }
+  else { S.sessionAccum = elapsed(); S.paused = true; }
+  $('#timerBtn').classList.toggle('paused', S.paused); tick();
+};
+window.addEventListener('pagehide', () => { if (S.p) { persistTime(); } });
+document.addEventListener('visibilitychange', () => { if (document.hidden && S.p) persistTime(); });
+
+/* ---------------- Video panel ---------------- */
+const curVideo = () => S.p && S.p.videos[S.vIdx];
+function renderVideoPanel() {
+  const p = S.p, has = p.videos.length > 0;
+  $('#videoBody').hidden = !has; $('#videoEmpty').hidden = has;
+  const sel = $('#videoSelect');
+  sel.hidden = p.videos.length < 2;
+  sel.innerHTML = p.videos.map((v, i) => `<option value="${i}">${esc(v.label || v.title || 'Video ' + (i + 1))}</option>`).join('');
+  sel.value = S.vIdx;
+  const cv = p.videos[S.vIdx];
+  $('#videoOne').textContent = p.videos.length === 1 ? (cv.label || cv.title || 'Video') : (has ? '' : 'Video');
+  $('#videoOne').hidden = p.videos.length > 1;
+  if (!has) { try { S.player && S.player.stopVideo(); } catch {} return; }
+  $('#ratePresets').innerHTML = PRESETS.map((r) => `<button class="btn sm" data-rate="${r}">${r === 1 ? '1×' : String(r).replace(/^0/, '') + '×'}</button>`).join('');
+  mountVideo();
+}
+async function mountVideo() {
+  const v = curVideo(); if (!v) return;
+  if (v.rate == null) v.rate = LS.get('defaultRate', 1);
+  updateRateUI(); renderMarks(); updateLoopUI();
+  try { await loadYT(); } catch {
+    $('#yt').outerHTML = '<div id="yt" class="view-empty" style="color:#ddd">YouTube can’t load right now. Check your connection.</div>'; return;
+  }
+  S.needRate = true;
+  if (!S.player) {
+    S.player = new YT.Player('yt', {
+      videoId: v.ytId,
+      playerVars: { playsinline: 1, rel: 0, modestbranding: 1, origin: location.origin },
+      events: {
+        onReady: () => { applyRate(); },
+        onStateChange: (e) => {
+          if (S.needRate && (e.data === 1 || e.data === 5 || e.data === 3)) { applyRate(); if (e.data === 1) S.needRate = false; }
+          if (e.data === 1) grabTitle();
+        },
+        onPlaybackRateChange: (e) => {
+          const v = curVideo(); if (!v || S.needRate) return;
+          v.rate = e.data; LS.set('defaultRate', e.data); updateRateUI(); saveProject(S.p);
+        }
+      }
+    });
+  } else {
+    try { S.player.cueVideoById(v.ytId); } catch {}
+    setTimeout(applyRate, 400);
+  }
+  clearInterval(S.pollT); S.pollT = setInterval(poll, 200);
+}
+function applyRate() {
+  const v = curVideo(); if (!v || !S.player || !S.player.setPlaybackRate) return;
+  try { S.player.setPlaybackRate(v.rate); } catch {}
+}
+function grabTitle() {
+  const v = curVideo(); if (!v || v.title) return;
+  try { const t = S.player.getVideoData().title; if (t) { v.title = t; saveProject(S.p); const o = $('#videoSelect').options[S.vIdx]; if (o && !v.label) o.textContent = t; if (!v.label && S.p.videos.length === 1) $('#videoOne').textContent = t; } } catch {}
+}
+function now() { try { return S.player && S.player.getCurrentTime ? S.player.getCurrentTime() : 0; } catch { return 0; } }
+function seek(t) { if (!S.player) return; try { S.player.seekTo(t, true); S.player.playVideo(); } catch {} }
+function poll() {
+  const v = curVideo(); if (!v) return;
+  const t = now();
+  $('#addMarkLbl').textContent = 'Mark ' + fmtTime(t);
+  const L = v.loop;
+  if (L && L.on && L.a != null && L.b != null && L.b > L.a && t >= L.b) seek(L.a);
+}
+$('#videoSelect').onchange = (e) => { S.vIdx = +e.target.value; S.p.ui.v = S.vIdx; saveProject(S.p); mountVideo(); };
+
+/* speed */
+function setRate(r) {
+  const v = curVideo(); if (!v) return;
+  r = Math.round(Math.min(2, Math.max(0.25, r)) * 100) / 100;
+  v.rate = r; LS.set('defaultRate', r);
+  applyRate(); updateRateUI(); saveProject(S.p);
+  setTimeout(() => { try { const got = S.player.getPlaybackRate(); if (got && Math.abs(got - r) > 0.001) { v.rate = got; updateRateUI(); saveProject(S.p); } } catch {} }, 500);
+}
+function updateRateUI() {
+  const v = curVideo(); if (!v) return;
+  $('#rateVal').textContent = v.rate.toFixed(2) + '×';
+  $$('#ratePresets [data-rate]').forEach((b) => b.setAttribute('aria-pressed', Math.abs(+b.dataset.rate - v.rate) < 0.001));
+}
+$('#rateDown').onclick = () => setRate((curVideo()?.rate || 1) - 0.05);
+$('#rateUp').onclick = () => setRate((curVideo()?.rate || 1) + 0.05);
+$('#ratePresets').onclick = (e) => { const b = e.target.closest('[data-rate]'); if (b) setRate(+b.dataset.rate); };
+
+/* loop */
+function updateLoopUI() {
+  const v = curVideo(); const L = (v && v.loop) || {};
+  $('#loopToggle').setAttribute('aria-pressed', !!L.on);
+  $('#loopRange').textContent = L.a != null || L.b != null ? `${L.a != null ? fmtTime(L.a) : '–'} → ${L.b != null ? fmtTime(L.b) : '–'}` : '';
+}
+function loopSet(k) { const v = curVideo(); if (!v) return; v.loop = v.loop || {}; v.loop[k] = Math.round(now() * 10) / 10; if (k === 'b' && v.loop.a != null && v.loop.b > v.loop.a) v.loop.on = true; updateLoopUI(); saveProject(S.p); }
+$('#setA').onclick = () => loopSet('a');
+$('#setB').onclick = () => loopSet('b');
+$('#loopToggle').onclick = () => {
+  const v = curVideo(); if (!v) return; v.loop = v.loop || {};
+  if (v.loop.a == null || v.loop.b == null || v.loop.b <= v.loop.a) { toast('Set A, then B a little later, to loop a section'); return; }
+  v.loop.on = !v.loop.on; if (v.loop.on) seek(v.loop.a); updateLoopUI(); saveProject(S.p);
+};
+$('#loopClear').onclick = () => { const v = curVideo(); if (!v) return; v.loop = {}; updateLoopUI(); saveProject(S.p); };
+
+/* bookmarks */
+function renderMarks() {
+  const v = curVideo(); const ms = (v && v.bookmarks) || [];
+  $('#marks').innerHTML = ms.length ? ms.map((m) => `
+    <li><button class="t" data-seek="${m.t}">${fmtTime(m.t)}</button><span class="lbl">${esc(m.label)}</span>
+    <button class="linkish" data-loop="${m.id}" title="Start the A–B loop here">Loop</button>
+    <button class="linkish" data-del="${m.id}" aria-label="Delete bookmark">Delete</button></li>`).join('')
+    : '<li class="hintline">Play to a spot, add a label, and tap Mark.</li>';
+  $('#cMarks').textContent = ms.length || '';
+}
+function addMark() {
+  const v = curVideo(); if (!v) return;
+  v.bookmarks = v.bookmarks || [];
+  const t = Math.round(now() * 10) / 10;
+  v.bookmarks.push({ id: uid(), t, label: $('#markLabel').value.trim() || 'Bookmark ' + (v.bookmarks.length + 1) });
+  v.bookmarks.sort((a, b) => a.t - b.t);
+  $('#markLabel').value = ''; renderMarks(); saveProject(S.p);
+}
+$('#addMark').onclick = addMark;
+$('#markLabel').onkeydown = (e) => { if (e.key === 'Enter') addMark(); };
+$('#marks').onclick = (e) => {
+  const v = curVideo(); const b = e.target.closest('button'); if (!b || !v) return;
+  if (b.dataset.seek != null) seek(+b.dataset.seek);
+  if (b.dataset.del) { v.bookmarks = v.bookmarks.filter((m) => m.id !== b.dataset.del); renderMarks(); saveProject(S.p); }
+  if (b.dataset.loop) { const m = v.bookmarks.find((x) => x.id === b.dataset.loop); v.loop = { a: m.t, b: null, on: false }; updateLoopUI(); saveProject(S.p); seek(m.t); toast('A set to ' + fmtTime(m.t) + '. Tap Set B where the loop should end.'); }
+};
+$('#addVideoBtn').onclick = $('#addVideoBtn2').onclick = () => openWizard(S.p, 2);
+
+/* ---------------- Sheet panel ---------------- */
+function renderSheetPanel() {
+  const p = S.p, sel = $('#sheetSelect');
+  sel.hidden = p.sheets.length < 2;
+  sel.innerHTML = p.sheets.map((s, i) => `<option value="${i}">${esc(s.label || s.name || 'Sheet ' + (i + 1))}</option>`).join('');
+  sel.value = S.sIdx; S.zoom = 1; S.lastW = 0;
+  const cs = p.sheets[S.sIdx];
+  $('#sheetOne').hidden = p.sheets.length > 1;
+  $('#sheetOne').textContent = cs ? (cs.label || cs.name || 'Sheet music') : 'Tab & sheet music';
+  renderSheet();
+}
+$('#sheetSelect').onchange = (e) => { S.sIdx = +e.target.value; S.p.ui.s = S.sIdx; S.zoom = 1; S.lastW = 0; saveProject(S.p); renderSheet(); };
+$('#addSheetBtn').onclick = () => openWizard(S.p, 3);
+$('#zoomIn').onclick = () => { S.zoom = Math.min(4, S.zoom * 1.2); renderSheet(true); };
+$('#zoomOut').onclick = () => { S.zoom = Math.max(0.4, S.zoom / 1.2); renderSheet(true); };
+$('#zoomFit').onclick = () => { S.zoom = 1; renderSheet(true); };
+async function renderSheet(zoomOnly) {
+  const view = $('#sheetView'); const s = S.p && S.p.sheets[S.sIdx];
+  const token = ++S.renderToken;
+  $$('.sheet-tools button').forEach((b) => (b.disabled = !s || s.kind === 'link'));
+  if (!s) {
+    view.innerHTML = `<div class="view-empty"><p>No tab or sheet music yet.<br>Upload a PDF or image, or link to it.</p><button class="btn primary" onclick="openWizard(S.p,3)"><svg class="i"><use href="#i-plus"/></svg>Add sheet music</button></div>`;
+    return;
+  }
+  if (s.kind === 'link') {
+    let host = s.url; try { host = new URL(s.url).hostname.replace(/^www\./, ''); } catch {}
+    view.innerHTML = `<div class="link-card"><span class="label">Linked sheet</span><div class="host">${esc(s.label || host)}</div><div class="url">${esc(s.url)}</div>
+      <div class="row"><a class="btn primary" href="${esc(s.url)}" target="_blank" rel="noopener"><svg class="i"><use href="#i-open"/></svg>Open</a>
+      <button class="btn outline" id="tryEmbed">Show it here</button></div>
+      <p class="hint">Many tab sites block being shown inside other apps. If “Show it here” stays blank, use Open, or save the page as a PDF and upload it.</p></div>`;
+    $('#tryEmbed').onclick = () => { view.innerHTML = `<iframe class="link-frame" src="${esc(s.url)}" referrerpolicy="no-referrer"></iframe>`; };
+    return;
+  }
+  const url = await blobUrl(s.blobId);
+  if (token !== S.renderToken) return;
+  if (!url) { view.innerHTML = '<div class="view-empty">This file is missing. Remove it in Edit and upload it again.</div>'; return; }
+  const width = view.clientWidth - 20;
+  if (s.kind === 'image') {
+    view.innerHTML = `<div class="img-wrap"><img src="${url}" alt="${esc(s.label || s.name || 'Sheet music')}" style="width:${Math.round(width * S.zoom)}px"></div>`;
+    S.lastW = view.clientWidth; return;
+  }
+  // PDF
+  const keep = zoomOnly ? view.scrollTop / Math.max(1, view.scrollHeight) : 0;
+  if (!zoomOnly || !S.pdfDoc || S.pdfDoc._ws !== s.blobId) {
+    view.innerHTML = '<div class="view-empty">Opening PDF…</div>';
+    try {
+      const lib = await loadPdf();
+      const rec = await DB.get('blobs', s.blobId);
+      const doc = await lib.getDocument({ data: new Uint8Array(rec.buf.slice(0)) }).promise;
+      if (token !== S.renderToken) return;
+      doc._ws = s.blobId; S.pdfDoc = doc;
+    } catch (err) {
+      view.innerHTML = `<div class="view-empty"><p>The PDF viewer couldn’t start${navigator.onLine ? '' : ' (you’re offline and it hasn’t been cached yet)'}.</p><a class="btn" href="${url}" target="_blank" rel="noopener">Open the PDF instead</a></div>`;
+      return;
+    }
+  }
+  const doc = S.pdfDoc; const wrap = document.createElement('div'); wrap.className = 'pdf-pages';
+  view.innerHTML = ''; view.appendChild(wrap);
+  const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+  for (let i = 1; i <= doc.numPages; i++) {
+    if (token !== S.renderToken) return;
+    const page = await doc.getPage(i);
+    const base = page.getViewport({ scale: 1 });
+    const scale = (width * S.zoom) / base.width;
+    const vp = page.getViewport({ scale: scale * dpr });
+    const c = document.createElement('canvas');
+    c.width = Math.floor(vp.width); c.height = Math.floor(vp.height);
+    c.style.width = Math.floor(vp.width / dpr) + 'px'; c.style.height = Math.floor(vp.height / dpr) + 'px';
+    c.setAttribute('aria-label', `Page ${i} of ${doc.numPages}`);
+    wrap.appendChild(c);
+    await page.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    if (i === 1 && keep) view.scrollTop = keep * view.scrollHeight;
+  }
+  if (keep) view.scrollTop = keep * view.scrollHeight;
+  S.lastW = view.clientWidth;
+}
+let rsT; window.addEventListener('resize', () => {
+  clearTimeout(rsT); rsT = setTimeout(() => { if (S.p && Math.abs($('#sheetView').clientWidth - S.lastW) > 30) renderSheet(true); }, 250);
+});
+
+/* ---------------- Notes ---------------- */
+function renderNotes() {
+  const p = S.p; const q = S.noteQuery.trim();
+  const list = [...p.comments].sort((a, b) => b.ts - a.ts).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
+  $('#cNotes').textContent = p.comments.length || '';
+  $('#noteSearch').parentElement.hidden = p.comments.length < 2 && !q;
+  const rx = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi') : null;
+  const hl = (t) => rx ? esc(t).replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), (m) => `<mark>${m}</mark>`) : esc(t);
+  const body = (text) => text.split(/(\[\d{1,2}:\d{2}(?::\d{2})?\])/g).map((seg) => {
+    const m = seg.match(/^\[(\d{1,2}:\d{2}(?::\d{2})?)\]$/);
+    return m ? `<button class="ttag" data-t="${parseTime(m[1])}" title="Jump the video here">${m[1]}</button>` : hl(seg);
+  }).join('');
+  $('#notes').innerHTML = list.length ? list.map((c) => `
+    <li><time datetime="${new Date(c.ts).toISOString()}"><span>${dateFmt.format(c.ts)}</span><button class="linkish" data-del="${c.id}">Delete</button></time><p>${body(c.text)}</p></li>`).join('')
+    : `<li class="hintline">${q ? 'No notes contain “' + esc(q) + '”.' : 'Notes are stamped with the date and time, newest on top.'}</li>`;
+}
+function addNote() {
+  const t = $('#noteText').value.trim(); if (!t) return;
+  S.p.comments.push({ id: uid(), ts: Date.now(), text: t });
+  $('#noteText').value = ''; grow(); renderNotes(); saveProject(S.p); askPersist();
+}
+$('#saveNote').onclick = addNote;
+$('#noteText').onkeydown = (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addNote(); };
+$('#tagTime').onclick = () => {
+  const ta = $('#noteText'); const tag = `[${fmtTime(now())}] `;
+  const s = ta.selectionStart ?? ta.value.length;
+  ta.value = ta.value.slice(0, s) + tag + ta.value.slice(ta.selectionEnd ?? s);
+  ta.focus(); ta.selectionStart = ta.selectionEnd = s + tag.length;
+};
+$('#noteSearch').oninput = (e) => { S.noteQuery = e.target.value; renderNotes(); };
+$('#notes').onclick = async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.t) seek(+b.dataset.t);
+  if (b.dataset.del && await confirmBox('Delete this note?', 'This can’t be undone.')) {
+    S.p.comments = S.p.comments.filter((c) => c.id !== b.dataset.del); renderNotes(); saveProject(S.p);
+  }
+};
+
+/* ---------------- Metronome (Web Audio, look-ahead scheduling) ---------------- */
+const M = { ac: null, out: null, running: false, bpm: LS.get('bpm', 90), beats: LS.get('beats', 4), vol: LS.get('metroVol', 0.7), next: 0, beat: 0, timer: null, queue: [], raf: 0, taps: [] };
+const SIGS = [2, 3, 4, 6];
+function metroCtx() {
+  if (!M.ac) { M.ac = new (window.AudioContext || window.webkitAudioContext)(); M.out = M.ac.createGain(); M.out.connect(M.ac.destination); }
+  M.out.gain.value = M.vol; if (M.ac.state !== 'running') M.ac.resume();
+  return M.ac;
+}
+function metroClick(t, first) {
+  const o = M.ac.createOscillator(), g = M.ac.createGain();
+  o.frequency.value = first ? 1760 : 1100;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(first ? 1 : 0.55, t + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.045);
+  o.connect(g); g.connect(M.out); o.start(t); o.stop(t + 0.06);
+}
+function metroSchedule() {
+  while (M.next < M.ac.currentTime + 0.12) {
+    metroClick(M.next, M.beat === 0 && M.beats > 1);
+    M.queue.push({ t: M.next, b: M.beat });
+    M.next += 60 / M.bpm; M.beat = (M.beat + 1) % M.beats;
+  }
+}
+function metroDraw() {
+  let lit = null;
+  while (M.queue.length && M.queue[0].t <= M.ac.currentTime) lit = M.queue.shift().b;
+  if (lit != null) {
+    $$('#metroBeats i').forEach((d, i) => d.classList.toggle('on', i === lit));
+    setTimeout(() => { const d = $$('#metroBeats i')[lit]; d && d.classList.remove('on'); }, 110);
+  }
+  M.raf = requestAnimationFrame(metroDraw);
+}
+function metroStart() {
+  metroCtx(); M.running = true; M.beat = 0; M.queue = [];
+  M.next = M.ac.currentTime + 0.08;
+  clearInterval(M.timer); M.timer = setInterval(metroSchedule, 25); metroSchedule();
+  cancelAnimationFrame(M.raf); metroDraw(); metroUI();
+}
+function metroStop() {
+  M.running = false; clearInterval(M.timer); cancelAnimationFrame(M.raf); M.queue = [];
+  $$('#metroBeats i').forEach((d) => d.classList.remove('on')); metroUI();
+}
+function metroUI() {
+  $('#bpmVal').textContent = M.bpm; $('#bpmRange').value = M.bpm; $('#metroVol').value = M.vol;
+  $('#metroBeats').innerHTML = Array.from({ length: M.beats }, (_, i) => `<i class="${i === 0 && M.beats > 1 ? 'first' : ''}"></i>`).join('');
+  $('#metroSig').innerHTML = SIGS.map((n) => `<button data-sig="${n}" aria-pressed="${n === M.beats}">${n}</button>`).join('');
+  $('#metroToggle').textContent = M.running ? 'Stop' : 'Start';
+  $('#metroBtn').classList.toggle('running', M.running);
+}
+function setBpm(v) {
+  M.bpm = Math.round(Math.min(260, Math.max(30, v))); LS.set('bpm', M.bpm);
+  if (S.p) { S.p.metro = { bpm: M.bpm, beats: M.beats }; saveProject(S.p); }
+  $('#bpmVal').textContent = M.bpm; $('#bpmRange').value = M.bpm;
+}
+$('#metroBtn').onclick = (e) => { e.stopPropagation(); const p = $('#metroPop'); p.hidden = !p.hidden; $('#metroBtn').setAttribute('aria-pressed', !p.hidden); metroUI(); };
+document.addEventListener('pointerdown', (e) => {
+  const p = $('#metroPop'); if (!p.hidden && !p.contains(e.target) && !$('#metroBtn').contains(e.target)) { p.hidden = true; $('#metroBtn').setAttribute('aria-pressed', false); }
+});
+$('#metroToggle').onclick = () => (M.running ? metroStop() : metroStart());
+$('#bpmDown').onclick = () => setBpm(M.bpm - 1);
+$('#bpmUp').onclick = () => setBpm(M.bpm + 1);
+$('#bpmRange').oninput = (e) => setBpm(+e.target.value);
+$('#metroVol').oninput = (e) => { M.vol = +e.target.value; LS.set('metroVol', M.vol); if (M.out) M.out.gain.value = M.vol; };
+$('#metroSig').onclick = (e) => {
+  const b = e.target.closest('[data-sig]'); if (!b) return;
+  M.beats = +b.dataset.sig; LS.set('beats', M.beats); M.beat = 0;
+  if (S.p) { S.p.metro = { bpm: M.bpm, beats: M.beats }; saveProject(S.p); }
+  metroUI();
+};
+$('#tapBtn').onclick = () => {
+  const t = performance.now(); M.taps = M.taps.filter((x) => t - x < 2500); M.taps.push(t);
+  if (M.taps.length >= 2) { const gaps = M.taps.slice(1).map((x, i) => x - M.taps[i]); setBpm(60000 / (gaps.reduce((a, b) => a + b, 0) / gaps.length)); }
+};
+document.addEventListener('keydown', (e) => {
+  if (e.code === 'KeyM' && S.p && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) && !document.querySelector('dialog[open]')) { e.preventDefault(); M.running ? metroStop() : metroStart(); }
+});
+function loadProjectMetro(p) {
+  if (p.metro) { M.bpm = p.metro.bpm; M.beats = p.metro.beats; }
+  metroUI();
+}
+
+/* ---------------- Rail tabs ---------------- */
+function showTab(name) {
+  $$('.tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === name));
+  $$('.tpane').forEach((p) => (p.hidden = p.dataset.pane !== name));
+  LS.set('tab', name);
+}
+$('.tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); };
+showTab(LS.get('tab', 'notes'));
+const grow = () => { const t = $('#noteText'); t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px'; };
+$('#noteText').addEventListener('input', grow);
+
+/* ---------------- Takes (recordings) ---------------- */
+async function renderTakes() {
+  const p = S.p; const ul = $('#takes');
+  $('#cTakes').textContent = p.recordings.length || '';
+  if (!p.recordings.length) { ul.innerHTML = '<li class="hintline">Record yourself to hear how it’s coming along. Takes are saved in this project.</li>'; return; }
+  const items = [...p.recordings].sort((a, b) => b.createdAt - a.createdAt);
+  ul.innerHTML = items.map((r) => `
+    <li class="take" data-id="${r.id}">
+      <div class="meta"><input type="text" value="${esc(r.name)}" aria-label="Take name" data-rename="${r.id}"><span class="mono muted" style="font-size:12px">${fmtTime(r.duration)}</span></div>
+      <div data-media></div>
+      <div class="foot"><span>${r.kind === 'video' ? 'Video · ' : ''}${dateFmt.format(r.createdAt)}</span>
+        <span><a class="linkish" style="opacity:1" data-dl="${r.id}">Save file</a><button class="linkish" style="opacity:1" data-del="${r.id}">Delete</button></span></div>
+    </li>`).join('');
+  for (const r of items) {
+    const li = ul.querySelector(`[data-id="${CSS.escape(r.id)}"]`); const url = await blobUrl(r.blobId);
+    if (!li || !url) continue;
+    li.querySelector('[data-media]').innerHTML = r.kind === 'video' ? `<video controls playsinline preload="metadata" src="${url}"></video>` : `<audio controls preload="metadata" src="${url}"></audio>`;
+    const a = li.querySelector('[data-dl]'); a.href = url; a.download = `${r.name.replace(/[^\w\- ]+/g, '').trim() || 'take'}.${extFor(r.mime)}`;
+  }
+}
+function extFor(m) { return /mp4/.test(m) ? (/audio/.test(m) ? 'm4a' : 'mp4') : /ogg/.test(m) ? 'ogg' : 'webm'; }
+$('#takes').addEventListener('change', (e) => {
+  const id = e.target.dataset.rename; if (!id) return;
+  const r = S.p.recordings.find((x) => x.id === id); r.name = e.target.value.trim() || r.name; saveProject(S.p);
+});
+$('#takes').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-del]'); if (!b) return;
+  if (!await confirmBox('Delete this take?', 'The recording is removed from this device.')) return;
+  const r = S.p.recordings.find((x) => x.id === b.dataset.del);
+  S.p.recordings = S.p.recordings.filter((x) => x !== r);
+  await DB.del('blobs', r.blobId); await saveProject(S.p); renderTakes();
+});
+
+/* recorder */
+const R = { startedMetro: false, kind: 'audio', stream: null, rec: null, chunks: [], t0: 0, timer: null, blob: null, mime: '', dur: 0, ac: null, raf: 0 };
+function pickMime(kind) {
+  const c = kind === 'video' ? ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'] : ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
+  if (!window.MediaRecorder) return null;
+  return c.find((m) => MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) || '';
+}
+function recReset() {
+  R.stream && R.stream.getTracks().forEach((t) => t.stop()); R.stream = null;
+  clearInterval(R.timer); cancelAnimationFrame(R.raf); try { R.ac && R.ac.close(); } catch {} R.ac = null;
+  R.rec = null; R.chunks = []; R.blob = null;
+  $('#recPreview').hidden = true; $('#recPreview').srcObject = null;
+  $('#recReview').hidden = true; $('#recReview').innerHTML = '';
+  $('#recClock').textContent = '0:00'; $('#recClock').classList.remove('live'); $('#recMeter').style.width = '0';
+  $('#recStart').hidden = false; $('#recStop').hidden = true; $('#recSave').hidden = true; $('#recDiscard').hidden = true;
+  if (R.startedMetro) { metroStop(); R.startedMetro = false; }
+  $('#recOpts').hidden = false; $('#recClick').checked = LS.get('recClick', false); $('#recCountIn').checked = LS.get('recCountIn', false);
+  $('#recErr').hidden = true; $('#recHint').hidden = false;
+  $$('.seg button').forEach((b) => (b.disabled = false));
+}
+function openRecorder() {
+  if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Recording isn’t supported in this browser'); return; }
+  recReset(); $('#recorder').showModal();
+}
+$('#recBtn').onclick = $('#recBtn2').onclick = openRecorder;
+$('#recAudio').onclick = () => { R.kind = 'audio'; $('#recAudio').setAttribute('aria-pressed', true); $('#recVideo').setAttribute('aria-pressed', false); };
+$('#recVideo').onclick = () => { R.kind = 'video'; $('#recVideo').setAttribute('aria-pressed', true); $('#recAudio').setAttribute('aria-pressed', false); };
+$('#recStart').onclick = async () => {
+  $('#recErr').hidden = true;
+  try {
+    R.stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+      video: R.kind === 'video' ? { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } } : false
+    });
+  } catch (err) {
+    $('#recErr').textContent = err && err.name === 'NotAllowedError'
+      ? 'Woodshed needs permission to use the ' + (R.kind === 'video' ? 'camera and microphone' : 'microphone') + '. Allow it in the browser’s site settings, then try again.'
+      : 'Couldn’t start the ' + (R.kind === 'video' ? 'camera' : 'microphone') + ': ' + (err && err.message || err);
+    $('#recErr').hidden = false; return;
+  }
+  if (R.kind === 'video') { const pv = $('#recPreview'); pv.srcObject = R.stream; pv.hidden = false; pv.play().catch(() => {}); }
+  // level meter
+  try {
+    R.ac = new (window.AudioContext || window.webkitAudioContext)();
+    const an = R.ac.createAnalyser(); an.fftSize = 512; R.ac.createMediaStreamSource(R.stream).connect(an);
+    const buf = new Uint8Array(an.fftSize);
+    const loop = () => { an.getByteTimeDomainData(buf); let pk = 0; for (const v of buf) pk = Math.max(pk, Math.abs(v - 128)); $('#recMeter').style.width = Math.min(100, pk / 1.1) + '%'; R.raf = requestAnimationFrame(loop); };
+    loop();
+  } catch {}
+  R.startedMetro = false;
+  const wantClick = $('#recClick').checked, countIn = $('#recCountIn').checked;
+  LS.set('recClick', wantClick); LS.set('recCountIn', countIn);
+  $$('.seg button').forEach((b) => (b.disabled = true)); $('#recStart').hidden = true; $('#recOpts').hidden = true;
+  if (countIn || wantClick) {
+    if (!M.running) R.startedMetro = true;
+    if (countIn) { metroStop(); metroStart(); } else if (!M.running) metroStart();
+  }
+  if (countIn) {
+    const beatMs = 60000 / M.bpm;
+    for (let i = M.beats; i > 0; i--) { $('#recClock').textContent = String(i); await new Promise((r) => setTimeout(r, beatMs)); }
+    if (!wantClick && R.startedMetro) { metroStop(); R.startedMetro = false; }
+  }
+  if (!R.stream) return;
+  R.mime = pickMime(R.kind);
+  R.rec = new MediaRecorder(R.stream, R.mime ? { mimeType: R.mime } : undefined);
+  R.mime = R.rec.mimeType || R.mime || (R.kind === 'video' ? 'video/webm' : 'audio/webm');
+  R.chunks = [];
+  R.rec.ondataavailable = (e) => { if (e.data && e.data.size) R.chunks.push(e.data); };
+  R.rec.onstop = () => {
+    if (R.startedMetro) { metroStop(); R.startedMetro = false; }
+    R.blob = new Blob(R.chunks, { type: R.mime });
+    R.stream.getTracks().forEach((t) => t.stop()); cancelAnimationFrame(R.raf); $('#recMeter').style.width = '0';
+    $('#recPreview').hidden = true;
+    const u = URL.createObjectURL(R.blob);
+    const name = (R.kind === 'video' ? 'Video take ' : 'Take ') + dayFmt.format(new Date()) + ', ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    $('#recReview').innerHTML = (R.kind === 'video' ? `<video controls playsinline src="${u}"></video>` : `<audio controls src="${u}" style="width:100%"></audio>`)
+      + `<label class="field" style="text-align:left">Name<input type="text" id="recName" value="${esc(name)}"></label>`;
+    $('#recReview').hidden = false; $('#recSave').hidden = false; $('#recDiscard').hidden = false; $('#recStop').hidden = true;
+  };
+  R.rec.start(1000);
+  R.t0 = Date.now(); $('#recClock').classList.add('live'); $('#recHint').hidden = true;
+  R.timer = setInterval(() => { R.dur = (Date.now() - R.t0) / 1000; $('#recClock').textContent = fmtTime(R.dur); }, 250);
+  $('#recStop').hidden = false;
+};
+$('#recStop').onclick = () => { clearInterval(R.timer); R.dur = (Date.now() - R.t0) / 1000; $('#recClock').classList.remove('live'); try { R.rec.stop(); } catch {} };
+$('#recDiscard').onclick = () => recReset();
+$('#recSave').onclick = async () => {
+  if (!R.blob) return;
+  const id = uid(), blobId = uid();
+  $('#recSave').disabled = true;
+  try {
+    await putFile(blobId, R.blob, 'take');
+    S.p.recordings.push({ id, blobId, kind: R.kind, mime: R.mime, duration: R.dur, createdAt: Date.now(), name: ($('#recName').value || 'Take').trim() });
+    await saveProject(S.p); askPersist();
+    $('#recorder').close(); renderTakes(); toast('Take saved');
+  } catch (e) { $('#recErr').textContent = 'Couldn’t save the take: ' + e.message; $('#recErr').hidden = false; }
+  $('#recSave').disabled = false;
+};
+$('#recorder').addEventListener('close', () => recReset());
+
+/* =========================================================
+   Wizard (create + edit)
+   ========================================================= */
+const STEPS = ['Name', 'Instruments', 'Videos', 'Sheet music'];
+const W = { step: 0, editing: false, d: null, files: new Map(), removedBlobs: [] };
+function openWizard(project, step) {
+  W.editing = !!project; W.files = new Map(); W.removedBlobs = [];
+  W.d = project ? JSON.parse(JSON.stringify({ id: project.id, name: project.name, instruments: project.instruments || [], videos: project.videos, sheets: project.sheets }))
+    : { id: uid(), name: '', instruments: [], videos: [], sheets: [] };
+  $('#wizTitle').textContent = project ? 'Edit project' : 'New project';
+  $('#wName').value = W.d.name; $('#wNameErr').hidden = true;
+  ['#wVidUrl', '#wVidLabel', '#wLinkUrl', '#wLinkLabel', '#wInstrCustom'].forEach((s) => ($(s).value = ''));
+  $('#wVidErr').hidden = true; $('#wDelete').hidden = !project;
+  renderInstr(); renderWVids(); renderWSheets();
+  $('#wizard').showModal(); goStep(step || 0);
+}
+function goStep(n) {
+  W.step = n;
+  $$('#wizard section[data-step]').forEach((s) => (s.hidden = +s.dataset.step !== n));
+  $('#wizSteps').innerHTML = STEPS.map((s, i) => `<li><button data-go="${i}" ${i === n ? 'aria-current="step"' : ''} class="${i < n || (W.editing && i !== n) ? 'done' : ''}"><span class="n">${i + 1}</span>${s}</button></li>`).join('');
+  $('#wBack').hidden = n === 0;
+  $('#wNext').hidden = n === STEPS.length - 1;
+  $('#wSave').hidden = !(W.editing || n === STEPS.length - 1);
+  const focus = { 0: '#wName', 2: '#wVidUrl', 3: '#wLinkUrl' }[n];
+  if (focus && matchMedia('(pointer:fine)').matches) setTimeout(() => $(focus).focus(), 50);
+}
+function nameOk() {
+  W.d.name = $('#wName').value.trim();
+  $('#wNameErr').hidden = !!W.d.name;
+  if (!W.d.name) { goStep(0); return false; } return true;
+}
+$('#wizSteps').onclick = (e) => { const b = e.target.closest('[data-go]'); if (!b) return; if (+b.dataset.go > 0 && !nameOk()) return; goStep(+b.dataset.go); };
+$('#wNext').onclick = () => { if (W.step === 0 && !nameOk()) return; if (W.step === 2) addWVid(true); goStep(W.step + 1); };
+$('#wBack').onclick = () => goStep(W.step - 1);
+$('#wName').onkeydown = (e) => { if (e.key === 'Enter') $('#wNext').click(); };
+$$('[data-close]').forEach((b) => (b.onclick = () => b.closest('dialog').close()));
+
+function renderInstr() {
+  const all = [...new Set([...INSTRUMENTS, ...W.d.instruments])];
+  $('#wInstr').innerHTML = all.map((i) => `<button aria-pressed="${W.d.instruments.includes(i)}" data-i="${esc(i)}">${esc(i)}</button>`).join('');
+}
+$('#wInstr').onclick = (e) => {
+  const b = e.target.closest('[data-i]'); if (!b) return; const i = b.dataset.i;
+  W.d.instruments = W.d.instruments.includes(i) ? W.d.instruments.filter((x) => x !== i) : [...W.d.instruments, i];
+  b.setAttribute('aria-pressed', W.d.instruments.includes(i));
+};
+function addInstr() { const v = $('#wInstrCustom').value.trim(); if (!v) return; if (!W.d.instruments.includes(v)) W.d.instruments.push(v); $('#wInstrCustom').value = ''; renderInstr(); }
+$('#wInstrAdd').onclick = addInstr;
+$('#wInstrCustom').onkeydown = (e) => { if (e.key === 'Enter') addInstr(); };
+
+function addWVid(silent) {
+  const url = $('#wVidUrl').value.trim(); if (!url) { return true; }
+  const id = ytId(url);
+  if (!id) { if (!silent) $('#wVidErr').hidden = false; return false; }
+  $('#wVidErr').hidden = true;
+  W.d.videos.push({ id: uid(), url, ytId: id, label: $('#wVidLabel').value.trim(), title: '', rate: null, bookmarks: [], loop: {} });
+  $('#wVidUrl').value = ''; $('#wVidLabel').value = ''; renderWVids(); return true;
+}
+function renderWVids() {
+  $('#wVidList').innerHTML = W.d.videos.map((v, i) => `<li><div class="what"><span>${esc(v.label || v.title || 'Video ' + (i + 1))}</span><small>${esc(v.url)}</small></div>
+    <button class="btn icon sm ghost" data-rm="${v.id}" aria-label="Remove video"><svg class="i"><use href="#i-x"/></svg></button></li>`).join('')
+    || '<li class="muted" style="background:none;padding-left:0">Add one or more videos: the original recording, a lesson, a slowed-down version.</li>';
+}
+$('#wVidAdd').onclick = () => addWVid(false);
+$('#wVidUrl').onkeydown = (e) => { if (e.key === 'Enter') addWVid(false); };
+$('#wVidList').onclick = (e) => { const b = e.target.closest('[data-rm]'); if (!b) return; W.d.videos = W.d.videos.filter((v) => v.id !== b.dataset.rm); renderWVids(); };
+
+$('#wFiles').onchange = (e) => {
+  for (const f of e.target.files) {
+    const kind = f.type === 'application/pdf' || /\.pdf$/i.test(f.name) ? 'pdf' : f.type.startsWith('image/') ? 'image' : null;
+    if (!kind) { toast(f.name + ' isn’t a PDF or image'); continue; }
+    const s = { id: uid(), kind, name: f.name, label: f.name.replace(/\.[^.]+$/, ''), blobId: uid() };
+    W.files.set(s.blobId, f); W.d.sheets.push(s);
+  }
+  e.target.value = ''; renderWSheets();
+};
+function addWLink() {
+  let url = $('#wLinkUrl').value.trim(); if (!url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  W.d.sheets.push({ id: uid(), kind: 'link', url, label: $('#wLinkLabel').value.trim() });
+  $('#wLinkUrl').value = ''; $('#wLinkLabel').value = ''; renderWSheets();
+}
+$('#wLinkAdd').onclick = addWLink;
+$('#wLinkUrl').onkeydown = (e) => { if (e.key === 'Enter') addWLink(); };
+function renderWSheets() {
+  $('#wSheetList').innerHTML = W.d.sheets.map((s) => `<li><span class="kind">${s.kind}</span><div class="what"><span>${esc(s.label || s.name || s.url)}</span><small>${esc(s.kind === 'link' ? s.url : s.name || '')}</small></div>
+    <button class="btn icon sm ghost" data-rm="${s.id}" aria-label="Remove"><svg class="i"><use href="#i-x"/></svg></button></li>`).join('');
+}
+$('#wSheetList').onclick = (e) => {
+  const b = e.target.closest('[data-rm]'); if (!b) return;
+  const s = W.d.sheets.find((x) => x.id === b.dataset.rm);
+  if (s.blobId) { if (W.files.has(s.blobId)) W.files.delete(s.blobId); else W.removedBlobs.push(s.blobId); }
+  W.d.sheets = W.d.sheets.filter((x) => x !== s); renderWSheets();
+};
+
+$('#wSave').onclick = async () => {
+  if (!nameOk()) return;
+  if (!addWVid(false)) { goStep(2); return; }
+  if ($('#wLinkUrl').value.trim()) addWLink();
+  $('#wSave').disabled = true;
+  try {
+    for (const [blobId, f] of W.files) await putFile(blobId, f);
+    for (const b of W.removedBlobs) await DB.del('blobs', b);
+    let p;
+    if (W.editing) {
+      p = S.p && S.p.id === W.d.id ? S.p : await DB.get('projects', W.d.id);
+      Object.assign(p, { name: W.d.name, instruments: W.d.instruments, videos: W.d.videos, sheets: W.d.sheets });
+    } else {
+      p = { ...W.d, comments: [], recordings: [], totalSeconds: 0, createdAt: Date.now(), lastOpened: 0, ui: { v: 0, s: 0 } };
+    }
+    await saveProject(p); askPersist();
+    $('#wizard').close();
+    if (W.editing && S.p && S.p.id === p.id) {
+      // jump to newly added items
+      if (W.step === 2) S.vIdx = Math.max(0, p.videos.length - 1);
+      if (W.step === 3) S.sIdx = Math.max(0, p.sheets.length - 1);
+      S.vIdx = Math.min(S.vIdx, Math.max(0, p.videos.length - 1)); S.sIdx = Math.min(S.sIdx, Math.max(0, p.sheets.length - 1));
+      p.ui = { v: S.vIdx, s: S.sIdx };
+      S.pdfDoc = null; renderHeader(); renderVideoPanel(); renderSheetPanel(); toast('Project updated');
+    } else {
+      location.hash = 'p-' + p.id;
+    }
+  } catch (e) { toast('Couldn’t save: ' + e.message); }
+  $('#wSave').disabled = false;
+};
+$('#wDelete').onclick = async () => {
+  if (!await confirmBox('Delete “' + W.d.name + '”?', 'Its notes, uploaded sheets and recorded takes are removed from this device.')) return;
+  const p = await DB.get('projects', W.d.id);
+  for (const s of p.sheets) if (s.blobId) await DB.del('blobs', s.blobId);
+  for (const r of p.recordings) await DB.del('blobs', r.blobId);
+  await DB.del('projects', p.id);
+  stopTimer(false); S.p = null; releaseUrls();
+  $('#wizard').close(); location.hash = ''; route(); toast('Project deleted');
+};
+
+/* =========================================================
+   Backup / restore
+   ========================================================= */
+function bufToB64(buf) {
+  let s = ''; const b = new Uint8Array(buf); const CH = 0x8000;
+  for (let i = 0; i < b.length; i += CH) s += String.fromCharCode.apply(null, b.subarray(i, i + CH));
+  return btoa(s);
+}
+function b64ToBuf(b64) { const s = atob(b64); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b.buffer; }
+$('#exportBtn').onclick = async () => {
+  toast('Preparing backup…');
+  const projects = await DB.all('projects'); const blobs = await DB.all('blobs');
+  const data = { app: 'woodshed', version: 1, exportedAt: new Date().toISOString(), projects, blobs: blobs.map((b) => ({ id: b.id, type: b.type, name: b.name, data: bufToB64(b.buf) })) };
+  const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
+  const a = document.createElement('a'); a.href = url; a.download = `woodshed-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+};
+$('#importFile').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const data = JSON.parse(await f.text());
+    if (data.app !== 'woodshed') throw new Error('this isn’t a Woodshed backup');
+    for (const b of data.blobs) await DB.put('blobs', { id: b.id, type: b.type, name: b.name, buf: b64ToBuf(b.data) });
+    for (const p of data.projects) await DB.put('projects', p);
+    await loadProjects(); renderHome(); toast(`Restored ${data.projects.length} project${data.projects.length === 1 ? '' : 's'}`);
+  } catch (err) { toast('Restore failed: ' + err.message); }
+};
+
+/* =========================================================
+   Boot
+   ========================================================= */
+(async function boot() {
+  try { await DB.open(); } catch (e) {
+    document.body.innerHTML = '<p style="padding:24px">Woodshed can’t open its storage. Private browsing blocks it; open the app in a normal window.</p>'; return;
+  }
+  await route();
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(() => {});
+})();
+</script>
+</body>
+</html>
