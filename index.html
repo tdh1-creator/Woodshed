@@ -15,20 +15,20 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: dark listening-room shell. Home is a track-list of projects; a project gives the sheet music the stage, with a slim rail (video, transport, notes/marks/takes) that can be hidden. */
 :root{
   --base:#000000; --panel:#121212; --raise:#1C1C1C; --hover:#2A2A2A; --line:#2A2A2A;
   --ink:#FFFFFF; --muted:#A3A3A3; --dim:#6E6E6E; --accent:#C9A12A; --accent-ink:#1A1404; --rec:#F0473C; --mark:rgba(201,161,42,.32);
   --f:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --f-mono:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r:10px; --r-sm:6px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--base);color:var(--ink);font:14px/1.45 var(--f);-webkit-font-smoothing:antialiased;
+body{background:var(--base);color:var(--ink);font:14px/1.45 var(--f);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--base);z-index:30}
 [hidden]{display:none!important}
@@ -60,7 +60,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 input[type=text],input[type=url],input[type=search],select,textarea{width:100%;min-height:40px;padding:9px 12px;border-radius:var(--r-sm);border:0;background:var(--raise);outline:none}
 input:focus,textarea:focus,select:focus{box-shadow:inset 0 0 0 1px var(--muted)}
 textarea{resize:none;line-height:1.45}
-label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
+label.field,div.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .row{display:flex;gap:8px;align-items:center}
 .row > input{flex:1 1 auto;min-width:0}
 .label{font-size:12px;font-weight:700;color:var(--muted)}
@@ -69,24 +69,24 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 #home{min-height:100%;background:linear-gradient(180deg,#2e2712 0,var(--panel) 260px) var(--panel)}
 .wrap{max-width:1100px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .home-top{display:flex;align-items:center;gap:12px;padding-block:20px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin-right:auto}
-.logo img{width:30px;height:30px;border-radius:7px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-.02em;margin-right:auto}
+.logo .mark{width:26px;height:26px;color:var(--accent);flex:none}
 .home-top input{width:220px;border-radius:999px;padding-left:16px}
 .home-title{padding-block:28px 18px}
 .home-title h1{font-size:clamp(34px,6vw,56px);line-height:1;font-weight:800;letter-spacing:-.03em;margin:0}
 .home-title p{margin:8px 0 0;color:var(--muted)}
-.list-head,.proj{display:grid;grid-template-columns:44px minmax(0,1fr) 120px 90px;gap:14px;align-items:center;padding:8px 12px}
+.list-head,.proj{display:grid;grid-template-columns:48px minmax(0,1fr) 120px 90px;gap:14px;align-items:center;padding:8px 12px}
 .list-head{color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
 .list-head span:nth-child(3),.list-head span:nth-child(4),.proj .when,.proj .tot{text-align:right}
 .ledger{display:grid;gap:2px;padding-bottom:20px}
 .proj{width:100%;text-align:left;border:0;background:transparent;border-radius:var(--r-sm);cursor:pointer;color:var(--ink)}
 .proj:hover{background:var(--hover)}
-.art{width:44px;height:44px;border-radius:4px;display:grid;place-items:center;font-weight:800;font-size:18px;color:rgba(255,255,255,.92);
+.art{position:relative;overflow:hidden;flex:none;width:48px;height:48px;border-radius:4px;display:grid;place-items:center;font-weight:800;font-size:18px;color:rgba(255,255,255,.92);
   background:linear-gradient(135deg,hsl(var(--h) 55% 42%),hsl(calc(var(--h) + 40) 45% 22%))}
 .proj .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .proj .sub{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .proj .when,.proj .tot{color:var(--muted);font-size:13px}
-@media (max-width:560px){.list-head,.proj{grid-template-columns:44px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
+@media (max-width:560px){.list-head,.proj{grid-template-columns:48px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
 .empty{padding:48px 0;display:grid;gap:14px;justify-items:start}
 .empty h2{font-size:24px;margin:0;font-weight:700}
 .empty p{margin:0;max-width:46ch;color:var(--muted)}
@@ -101,7 +101,7 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .topbar h1{font-size:18px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pInstr{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .timer{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:0;background:var(--panel);cursor:pointer;color:var(--ink)}
-.timer .clock{font:500 14px/1 var(--f-mono)}
+.timer .clock{font:500 14px/1 var(--f-mono);min-width:4.1em}
 .timer .tot{font-size:12px;color:var(--muted)}
 .timer .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
 .timer.paused .pulse{animation:none;background:var(--dim)}
@@ -160,6 +160,11 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 li:hover .linkish,.linkish:focus-visible{opacity:1}
 @media (hover:none){.linkish{opacity:1}}
 .linkish:hover{color:var(--rec)}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.covers{display:flex;gap:8px;flex-wrap:wrap}
+.covers button,.covers label{position:relative;width:64px;height:64px;border-radius:6px;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--raise);color:var(--muted);display:grid;place-items:center;font-size:11px;font-weight:600;text-align:center;line-height:1.2}
+.covers img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.covers [aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
 .snip-wrap{display:flex;flex-direction:column;gap:8px}
 .snip-new{display:flex;gap:6px}
 .snip-new input{min-height:34px;padding:6px 10px;font-size:13px}
@@ -345,6 +350,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9M8 16h8"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 32 32"><path fill-rule="evenodd" fill="currentColor" stroke="none" d="M14.7 3.1a2 2 0 012.6 0l9.6 8.3a2 2 0 01.7 1.5V27a2 2 0 01-2 2H5.4a2 2 0 01-2-2V12.9a2 2 0 01.7-1.5zM16 12.7a7.5 7.5 0 100 15 7.5 7.5 0 000-15zm0 .5a7 7 0 110 14 7 7 0 010-14zM16 15a5.2 5.2 0 100 10.4A5.2 5.2 0 0016 15z"/><path fill="currentColor" stroke="none" d="M14.13 14.6h.45v11.2h-.45zM15.23 14.6h.45v11.2h-.45zM16.33 14.6h.45v11.2h-.45zM17.43 14.6h.45v11.2h-.45z"/></symbol>
   <symbol id="i-fork" viewBox="0 0 24 24"><path d="M9 3v7a3 3 0 006 0V3M12 13v8"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
@@ -358,7 +364,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
 <main id="home">
   <div class="wrap">
     <div class="home-top">
-      <div class="logo"><img src="icons/icon-192.png" alt="">Woodshed</div>
+      <div class="logo"><svg class="mark" aria-hidden="true"><use href="#i-logo"/></svg><span>Woodshed</span></div>
       <input type="search" id="projSearch" placeholder="Search projects" aria-label="Search projects">
       <button class="btn primary" id="newProjBtn"><svg class="i"><use href="#i-plus"/></svg>New</button>
     </div>
@@ -539,6 +545,11 @@ input[type=range]{accent-color:var(--accent);width:100%}
           <input type="text" id="wName" placeholder="e.g. Blackbird, fingerstyle" autocomplete="off">
         </label>
         <p class="err" id="wNameErr" hidden>Give the project a name to continue.</p>
+        <div class="field" id="wCoverWrap" hidden style="margin-top:18px">Cover
+          <div class="covers" id="wCovers"></div>
+          <input type="file" id="wCoverFile" accept="image/*" hidden>
+          <p class="hint" style="font-weight:400">Pick the picture shown for this project in your list. It uses the first video’s thumbnail unless you choose another.</p>
+        </div>
       </section>
       <section data-step="1" hidden>
         <p class="hint">Pick every instrument this project covers.</p>
@@ -792,6 +803,25 @@ const INSTRUMENTS = ['Electric guitar', 'Acoustic guitar', 'Classical guitar', '
 async function loadProjects() {
   S.projects = (await DB.all('projects')).sort((a, b) => (b.lastOpened || b.updatedAt) - (a.lastOpened || a.updatedAt));
 }
+/* ---------------- Project covers ---------------- */
+const ytThumb = (id) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+function coverOf(p) {
+  const c = p.cover || {};
+  if (c.type === 'none') return null;
+  if (c.type === 'yt' && p.videos.some((v) => v.ytId === c.ytId)) return { yt: c.ytId };
+  if (c.type === 'blob' && (c.custom || p.sheets.some((s) => s.blobId === c.blobId))) return { blob: c.blobId };
+  if (p.videos[0]) return { yt: p.videos[0].ytId };
+  const img = p.sheets.find((s) => s.kind === 'image'); if (img) return { blob: img.blobId };
+  return null;
+}
+function coverImg(c) {
+  if (!c) return '';
+  if (c.yt) return `<img src="${ytThumb(c.yt)}" alt="" loading="lazy" onerror="this.remove()">`;
+  return `<img data-blob="${esc(c.blob)}" alt="" onerror="this.remove()">`;
+}
+async function fillBlobImgs(root) {
+  for (const im of root.querySelectorAll('img[data-blob]')) { const u = await blobUrl(im.dataset.blob); if (u) im.src = u; else im.remove(); }
+}
 function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
 function renderHome() {
   const q = $('#projSearch').value.trim().toLowerCase();
@@ -804,12 +834,13 @@ function renderHome() {
   $('#ledger').innerHTML = list.map((p) => {
     const sub = [(p.instruments || []).join(', '), plural(p.videos.length, 'video'), plural(p.sheets.length, 'sheet'), plural(p.recordings.length, 'take')].filter(Boolean).join(' · ');
     return `<button class="proj" data-id="${esc(p.id)}">
-      <span class="art" style="--h:${hue(p.name)}">${esc((p.name.trim()[0] || '♪').toUpperCase())}</span>
+      <span class="art" style="--h:${hue(p.name)}">${esc((p.name.trim()[0] || '♪').toUpperCase())}${coverImg(coverOf(p))}</span>
       <span style="min-width:0;display:grid"><span class="name">${esc(p.name)}</span><span class="sub">${esc(sub || 'Empty project')}</span></span>
       <span class="when">${relDay(p.lastOpened)}</span>
       <span class="tot mono">${p.totalSeconds ? fmtDur(p.totalSeconds) : '–'}</span>
     </button>`;
   }).join('') || (n ? `<p class="muted" style="padding:12px">No project matches “${esc(q)}”.</p>` : '');
+  fillBlobImgs($('#ledger'));
   updateStorageLine();
 }
 async function updateStorageLine() {
@@ -1798,16 +1829,17 @@ $('#recorder').addEventListener('close', () => recReset());
    Wizard (create + edit)
    ========================================================= */
 const STEPS = ['Name', 'Instruments', 'Videos', 'Sheet music'];
-const W = { step: 0, editing: false, d: null, files: new Map(), removedBlobs: [] };
+const W = { step: 0, editing: false, d: null, files: new Map(), removedBlobs: [], coverFile: null, coverUrl: null };
 function openWizard(project, step) {
   W.editing = !!project; W.files = new Map(); W.removedBlobs = [];
-  W.d = project ? JSON.parse(JSON.stringify({ id: project.id, name: project.name, instruments: project.instruments || [], videos: project.videos, sheets: project.sheets }))
+  W.coverFile = null; if (W.coverUrl) URL.revokeObjectURL(W.coverUrl); W.coverUrl = null;
+  W.d = project ? JSON.parse(JSON.stringify({ id: project.id, name: project.name, instruments: project.instruments || [], videos: project.videos, sheets: project.sheets, cover: project.cover || null }))
     : { id: uid(), name: '', instruments: [], videos: [], sheets: [] };
   $('#wizTitle').textContent = project ? 'Edit project' : 'New project';
   $('#wName').value = W.d.name; $('#wNameErr').hidden = true;
   ['#wVidUrl', '#wVidLabel', '#wLinkUrl', '#wLinkLabel', '#wInstrCustom'].forEach((s) => ($(s).value = ''));
   $('#wVidErr').hidden = true; $('#wDelete').hidden = !project;
-  renderInstr(); renderWVids(); renderWSheets();
+  renderInstr(); renderWVids(); renderWSheets(); renderCovers();
   $('#wizard').showModal(); goStep(step || 0);
 }
 function goStep(n) {
@@ -1825,6 +1857,40 @@ function nameOk() {
   $('#wNameErr').hidden = !!W.d.name;
   if (!W.d.name) { goStep(0); return false; } return true;
 }
+async function renderCovers() {
+  const wrap = $('#wCoverWrap'); wrap.hidden = !W.editing; if (!W.editing) return;
+  const d = W.d, cur = coverOf(d), sel = (o) => (o.yt && cur && cur.yt === o.yt) || (o.blob && cur && cur.blob === o.blob) || (o.none && !cur);
+  const opts = [
+    ...d.videos.map((v) => ({ yt: v.ytId, label: v.label || v.title || 'Video' })),
+    ...d.sheets.filter((s) => s.kind === 'image' && !W.files.has(s.blobId)).map((s) => ({ blob: s.blobId, label: s.label || 'Image' })),
+    ...(d.cover && d.cover.custom ? [{ blob: d.cover.blobId, label: 'Your photo', custom: true }] : [])
+  ];
+  $('#wCovers').innerHTML = opts.map((o, i) => `<button type="button" data-c="${i}" aria-pressed="${sel(o)}" aria-label="Use ${esc(o.label)} as cover">${o.yt ? `<img src="${ytThumb(o.yt)}" alt="" onerror="this.remove()">` : `<img ${o.custom && W.coverUrl ? `src="${W.coverUrl}"` : `data-blob="${esc(o.blob)}"`} alt="">`}</button>`).join('')
+    + `<label for="wCoverFile" title="Upload a photo, e.g. an album cover"><span><svg class="i"><use href="#i-upload"/></svg><br>Photo</span></label>`
+    + `<button type="button" data-c="none" aria-pressed="${sel({ none: true })}" style="--h:${hue(d.name || 'x')};background:linear-gradient(135deg,hsl(var(--h) 55% 42%),hsl(calc(var(--h) + 40) 45% 22%));color:#fff;font-size:22px;font-weight:800">${esc(((d.name || '').trim()[0] || '♪').toUpperCase())}</button>`;
+  W.coverOpts = opts;
+  fillBlobImgs($('#wCovers'));
+}
+$('#wCovers').onclick = (e) => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  if (b.dataset.c === 'none') W.d.cover = { type: 'none' };
+  else { const o = W.coverOpts[+b.dataset.c]; W.d.cover = o.yt ? { type: 'yt', ytId: o.yt } : { type: 'blob', blobId: o.blob, custom: !!o.custom }; }
+  renderCovers();
+};
+// A photo you pick is cropped to a square and shrunk, so covers stay small.
+$('#wCoverFile').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const bmp = await createImageBitmap(f);
+    const side = Math.min(bmp.width, bmp.height), N = 360, c = document.createElement('canvas'); c.width = c.height = N;
+    c.getContext('2d').drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, N, N);
+    W.coverFile = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.86));
+    if (W.coverUrl) URL.revokeObjectURL(W.coverUrl); W.coverUrl = URL.createObjectURL(W.coverFile);
+    W.d.cover = { type: 'blob', blobId: 'cover-' + uid(), custom: true };
+    renderCovers();
+  } catch { toast('That picture couldn’t be opened. Try a JPG or PNG.'); }
+};
+$('#wName').addEventListener('input', () => { if (W.editing) { const b = $('#wCovers [data-c="none"]'); if (b) b.textContent = (($('#wName').value || '').trim()[0] || '♪').toUpperCase(); } });
 $('#wizSteps').onclick = (e) => { const b = e.target.closest('[data-go]'); if (!b) return; if (+b.dataset.go > 0 && !nameOk()) return; goStep(+b.dataset.go); };
 $('#wNext').onclick = () => { if (W.step === 0 && !nameOk()) return; if (W.step === 2) addWVid(true); goStep(W.step + 1); };
 $('#wBack').onclick = () => goStep(W.step - 1);
@@ -1959,7 +2025,10 @@ $('#wSave').onclick = async () => {
     let p;
     if (W.editing) {
       p = S.p && S.p.id === W.d.id ? S.p : await DB.get('projects', W.d.id);
-      Object.assign(p, { name: W.d.name, instruments: W.d.instruments, videos: W.d.videos, sheets: W.d.sheets });
+      const old = p.cover;
+      if (W.coverFile && W.d.cover && W.d.cover.custom) await putFile(W.d.cover.blobId, W.coverFile, 'cover.jpg');
+      if (old && old.custom && (!W.d.cover || W.d.cover.blobId !== old.blobId)) await DB.del('blobs', old.blobId);
+      Object.assign(p, { name: W.d.name, instruments: W.d.instruments, videos: W.d.videos, sheets: W.d.sheets, cover: W.d.cover || null });
     } else {
       p = { ...W.d, comments: [], recordings: [], totalSeconds: 0, createdAt: Date.now(), lastOpened: 0, ui: { v: 0, s: 0 } };
     }
@@ -1970,7 +2039,7 @@ $('#wSave').onclick = async () => {
       if (W.step === 2) S.vIdx = Math.max(0, p.videos.length - 1);
       if (W.step === 3) S.sIdx = Math.max(0, p.sheets.length - 1);
       S.vIdx = Math.min(S.vIdx, Math.max(0, p.videos.length - 1)); S.sIdx = Math.min(S.sIdx, Math.max(0, p.sheets.length - 1));
-      p.ui = { v: S.vIdx, s: S.sIdx };
+      p.ui = Object.assign(p.ui || {}, { v: S.vIdx, s: S.sIdx }); setupTuner(p);
       S.pdfDoc = null; renderHeader(); renderVideoPanel(); renderSheetPanel(); toast('Project updated');
     } else {
       location.hash = 'p-' + p.id;
@@ -1982,6 +2051,7 @@ $('#wDelete').onclick = async () => {
   if (!await confirmBox('Delete “' + W.d.name + '”?', 'Its notes, uploaded sheets and recorded takes are removed from this device.')) return;
   const p = await DB.get('projects', W.d.id);
   for (const s of p.sheets) if (s.blobId) await DB.del('blobs', s.blobId);
+  if (p.cover && p.cover.custom) await DB.del('blobs', p.cover.blobId);
   for (const r of p.recordings) await DB.del('blobs', r.blobId);
   await DB.del('projects', p.id);
   stopTimer(false); S.p = null; releaseUrls();
