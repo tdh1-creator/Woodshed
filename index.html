@@ -15,20 +15,20 @@
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800&display=swap">
 <style>
 /* Layout: dark listening-room shell. Home is a track-list of projects; a project gives the sheet music the stage, with a slim rail (video, transport, notes/marks/takes) that can be hidden. */
 :root{
   --base:#000000; --panel:#121212; --raise:#1C1C1C; --hover:#2A2A2A; --line:#2A2A2A;
   --ink:#FFFFFF; --muted:#A3A3A3; --dim:#6E6E6E; --accent:#C9A12A; --accent-ink:#1A1404; --rec:#F0473C; --mark:rgba(201,161,42,.32);
   --f:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --f-mono:"JetBrains Mono", ui-monospace, "SF Mono", Consolas, monospace;
+  --f-mono:"Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r:10px; --r-sm:6px;
   color-scheme:dark;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
-body{background:var(--base);color:var(--ink);font:14px/1.45 var(--f);-webkit-font-smoothing:antialiased;
+body{background:var(--base);color:var(--ink);font:14px/1.45 var(--f);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;
   padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--base);z-index:30}
 [hidden]{display:none!important}
@@ -60,7 +60,7 @@ svg.i{width:18px;height:18px;flex:none;stroke:currentColor;fill:none;stroke-widt
 input[type=text],input[type=url],input[type=search],select,textarea{width:100%;min-height:40px;padding:9px 12px;border-radius:var(--r-sm);border:0;background:var(--raise);outline:none}
 input:focus,textarea:focus,select:focus{box-shadow:inset 0 0 0 1px var(--muted)}
 textarea{resize:none;line-height:1.45}
-label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
+label.field,div.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .row{display:flex;gap:8px;align-items:center}
 .row > input{flex:1 1 auto;min-width:0}
 .label{font-size:12px;font-weight:700;color:var(--muted)}
@@ -69,24 +69,24 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 #home{min-height:100%;background:linear-gradient(180deg,#2e2712 0,var(--panel) 260px) var(--panel)}
 .wrap{max-width:1100px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
 .home-top{display:flex;align-items:center;gap:12px;padding-block:20px}
-.logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin-right:auto}
-.logo img{width:30px;height:30px;border-radius:7px}
+.logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:18px;letter-spacing:-.02em;margin-right:auto}
+.logo .mark{width:26px;height:26px;color:var(--accent);flex:none}
 .home-top input{width:220px;border-radius:999px;padding-left:16px}
 .home-title{padding-block:28px 18px}
 .home-title h1{font-size:clamp(34px,6vw,56px);line-height:1;font-weight:800;letter-spacing:-.03em;margin:0}
 .home-title p{margin:8px 0 0;color:var(--muted)}
-.list-head,.proj{display:grid;grid-template-columns:44px minmax(0,1fr) 120px 90px;gap:14px;align-items:center;padding:8px 12px}
+.list-head,.proj{display:grid;grid-template-columns:48px minmax(0,1fr) 120px 90px;gap:14px;align-items:center;padding:8px 12px}
 .list-head{color:var(--muted);font-size:12px;border-bottom:1px solid var(--line);margin-bottom:8px}
 .list-head span:nth-child(3),.list-head span:nth-child(4),.proj .when,.proj .tot{text-align:right}
 .ledger{display:grid;gap:2px;padding-bottom:20px}
 .proj{width:100%;text-align:left;border:0;background:transparent;border-radius:var(--r-sm);cursor:pointer;color:var(--ink)}
 .proj:hover{background:var(--hover)}
-.art{width:44px;height:44px;border-radius:4px;display:grid;place-items:center;font-weight:800;font-size:18px;color:rgba(255,255,255,.92);
+.art{position:relative;overflow:hidden;flex:none;width:48px;height:48px;border-radius:4px;display:grid;place-items:center;font-weight:800;font-size:18px;color:rgba(255,255,255,.92);
   background:linear-gradient(135deg,hsl(var(--h) 55% 42%),hsl(calc(var(--h) + 40) 45% 22%))}
 .proj .name{font-weight:600;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .proj .sub{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .proj .when,.proj .tot{color:var(--muted);font-size:13px}
-@media (max-width:560px){.list-head,.proj{grid-template-columns:44px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
+@media (max-width:560px){.list-head,.proj{grid-template-columns:48px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
 .empty{padding:48px 0;display:grid;gap:14px;justify-items:start}
 .empty h2{font-size:24px;margin:0;font-weight:700}
 .empty p{margin:0;max-width:46ch;color:var(--muted)}
@@ -101,7 +101,7 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .topbar h1{font-size:18px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #pInstr{color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .timer{display:flex;align-items:center;gap:8px;height:34px;padding:0 12px;border-radius:999px;border:0;background:var(--panel);cursor:pointer;color:var(--ink)}
-.timer .clock{font:500 14px/1 var(--f-mono)}
+.timer .clock{font:500 14px/1 var(--f-mono);min-width:4.1em}
 .timer .tot{font-size:12px;color:var(--muted)}
 .timer .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
 .timer.paused .pulse{animation:none;background:var(--dim)}
@@ -160,7 +160,54 @@ label.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 li:hover .linkish,.linkish:focus-visible{opacity:1}
 @media (hover:none){.linkish{opacity:1}}
 .linkish:hover{color:var(--rec)}
-.marks li{display:flex;align-items:center;gap:6px;padding:4px;border-radius:var(--r-sm)}
+.art img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.covers{display:flex;gap:8px;flex-wrap:wrap}
+.covers button,.covers label{position:relative;width:64px;height:64px;border-radius:6px;border:0;padding:0;overflow:hidden;cursor:pointer;background:var(--raise);color:var(--muted);display:grid;place-items:center;font-size:11px;font-weight:600;text-align:center;line-height:1.2}
+.covers img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;max-width:none}
+.covers [aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.snip-wrap{display:flex;flex-direction:column;gap:8px}
+.snip-new{display:flex;gap:6px}
+.snip-new input{min-height:34px;padding:6px 10px;font-size:13px}
+.snips{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+.snip{display:flex;align-items:center;gap:10px;padding:6px 4px 6px 6px;border-radius:var(--r-sm);cursor:pointer;
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation}
+.snip:hover{background:var(--hover)}
+.snip.on{background:var(--raise)}
+.snip .chip{flex:none;width:30px;height:30px;border-radius:6px;display:grid;place-items:center;font:700 13px var(--f-mono);
+  background:var(--c,var(--raise));color:var(--ci,var(--muted));box-shadow:inset 0 0 0 1px var(--line)}
+.snip.whole .chip{color:var(--ink)}
+.snip .chip svg{width:13px;height:13px}
+.snip .body{flex:1;min-width:0;display:grid}
+.snip .nm{font-weight:600;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snip.on .nm{color:var(--accent)}
+.snip .meta{font:11px var(--f-mono);color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snip .last{color:var(--muted);font-family:var(--f)}
+.snip .more{flex:none;border:0;background:none;color:var(--dim);width:30px;height:30px;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+.snip .more:hover{color:var(--ink);background:var(--hover)}
+.snip .eq{display:none;gap:2px;align-items:flex-end;height:12px;margin-left:6px}
+.snip.on .eq{display:inline-flex}
+.snip .eq i{width:2px;background:var(--accent);animation:eq 1s ease-in-out infinite}
+.snip .eq i:nth-child(2){animation-delay:-.4s}.snip .eq i:nth-child(3){animation-delay:-.7s}
+@keyframes eq{0%,100%{height:3px}50%{height:12px}}
+.sd{display:flex;flex-direction:column;gap:12px}
+.sd-head{display:flex;align-items:center;gap:4px}
+.sd-head input{font-weight:700;font-size:15px;min-height:36px;padding:4px 8px;background:transparent}
+.sd-head input:focus{background:var(--raise)}
+.sd-sec{display:grid;gap:6px}
+.sd-range{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:13px}
+.nudge{display:inline-flex;align-items:center;background:var(--raise);border-radius:999px}
+.nudge button{border:0;background:none;width:30px;height:30px;border-radius:50%;cursor:pointer;color:var(--muted);font-size:15px}
+.nudge button:hover{color:var(--ink);background:var(--hover)}
+.nudge .v{font:500 12px var(--f-mono);min-width:56px;text-align:center;width:auto;border-radius:6px;color:var(--ink)}
+.ratebar{display:grid;grid-template-columns:repeat(10,1fr);gap:3px}
+.ratebar button{min-height:32px;border:0;border-radius:5px;cursor:pointer;font:600 12px var(--f-mono);background:var(--raise);color:var(--muted)}
+.ratebar button:hover{box-shadow:inset 0 0 0 1px var(--c)}
+.ratebar button.lit{background:var(--c);color:var(--ci)}
+.ratebar button.sel{box-shadow:0 0 0 2px var(--ink)}
+.hist{display:grid;gap:4px}
+.hist svg{width:100%;height:54px;display:block}
+.hist .cap{display:flex;justify-content:space-between;font-size:11px;color:var(--dim)}
+.sd .foot-row{display:flex;justify-content:space-between;align-items:center;gap:8px}
 .marks li:hover{background:var(--hover)}
 .marks .t{font:500 12px var(--f-mono);min-width:46px;min-height:28px;border:0;background:none;color:var(--accent);cursor:pointer;text-align:left}
 .marks .lbl{flex:1;min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -183,6 +230,7 @@ li:hover .linkish,.linkish:focus-visible{opacity:1}
 .sheet-view{flex:1;min-height:0;overflow:auto;-webkit-overflow-scrolling:touch}
 .pdf-pages{display:grid;gap:8px;padding:0 8px 8px;justify-items:center}
 .pdf-pages canvas{background:#fff;border-radius:2px;max-width:none}
+.sheet-view.night .pdf-pages canvas,.sheet-view.night .img-wrap img{filter:invert(1) hue-rotate(180deg)}
 .img-wrap{padding:0 8px 8px;display:flex;justify-content:center}
 .img-wrap img{max-width:none;background:#fff;border-radius:2px}
 .link-card{margin:24px auto;max-width:520px;padding:24px;display:grid;gap:12px}
@@ -263,6 +311,24 @@ dialog::backdrop{background:rgba(0,0,0,.7)}
 input[type=range]{accent-color:var(--accent);width:100%}
 .seg.sm button{min-height:28px;padding:0 10px;font-size:12px}
 #metroBtn.running{color:var(--accent)}
+#tunerBtn.running{color:var(--accent)}
+.tuner-pop{width:min(320px,calc(100vw - 24px))}
+.tuner-pop #tunerInst{justify-self:center}
+.tread{display:grid;gap:6px;justify-items:center;text-align:center}
+.tnote{font:800 52px/1 var(--f);letter-spacing:-.02em;transition:color .15s}
+.tnote sub{font-size:18px;font-weight:600;color:var(--muted);vertical-align:baseline;margin-left:2px}
+.tsub{font-size:13px;color:var(--muted);min-height:18px}
+.needle{position:relative;width:100%;height:22px;border-radius:999px;background:var(--raise);overflow:hidden}
+.needle .mid{position:absolute;left:50%;top:3px;bottom:3px;width:2px;margin-left:-1px;background:var(--dim)}
+.needle i{position:absolute;top:3px;bottom:3px;left:50%;width:6px;margin-left:-3px;border-radius:3px;background:var(--muted);transition:left .12s linear,background .15s;opacity:0}
+.needle.live i{opacity:1}
+.tscale{display:flex;justify-content:space-between;width:100%;font-size:10px;color:var(--dim)}
+.tstrings{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
+.tstrings button{width:42px;height:42px;padding:0;border-radius:50%;border:0;background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
+.tstrings button sub{font-size:9px;color:var(--dim);font-weight:500}
+.tstrings button.near{box-shadow:inset 0 0 0 2px var(--accent)}
+.tstrings button.playing{background:var(--accent);color:var(--accent-ink)}
+.tstrings button.playing sub{color:var(--accent-ink)}
 #metroBtn.running svg{animation:pulse 1s ease-in-out infinite}
 .recopts{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;font-size:13px;color:var(--muted)}
 .recopts label{display:flex;align-items:center;gap:6px;cursor:pointer}
@@ -284,6 +350,11 @@ input[type=range]{accent-color:var(--accent);width:100%}
   <symbol id="i-open" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1h5"/></symbol>
   <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9M8 16h8"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-logo" viewBox="0 0 32 32"><path fill-rule="evenodd" fill="currentColor" stroke="none" d="M14.7 3.1a2 2 0 012.6 0l9.6 8.3a2 2 0 01.7 1.5V27a2 2 0 01-2 2H5.4a2 2 0 01-2-2V12.9a2 2 0 01.7-1.5zM16 12.7a7.5 7.5 0 100 15 7.5 7.5 0 000-15zm0 .5a7 7 0 110 14 7 7 0 010-14zM16 15a5.2 5.2 0 100 10.4A5.2 5.2 0 0016 15z"/><path fill="currentColor" stroke="none" d="M14.13 14.6h.45v11.2h-.45zM15.23 14.6h.45v11.2h-.45zM16.33 14.6h.45v11.2h-.45zM17.43 14.6h.45v11.2h-.45z"/></symbol>
+  <symbol id="i-fork" viewBox="0 0 24 24"><path d="M9 3v7a3 3 0 006 0V3M12 13v8"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-paste" viewBox="0 0 24 24"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4h6v3H9z"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 4v12M6 10l6 6 6-6M5 20h14"/></symbol>
   <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M6 10l6-6 6 6M5 20h14"/></symbol>
@@ -293,7 +364,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
 <main id="home">
   <div class="wrap">
     <div class="home-top">
-      <div class="logo"><img src="icons/icon-192.png" alt="">Woodshed</div>
+      <div class="logo"><svg class="mark" aria-hidden="true"><use href="#i-logo"/></svg><span>Woodshed</span></div>
       <input type="search" id="projSearch" placeholder="Search projects" aria-label="Search projects">
       <button class="btn primary" id="newProjBtn"><svg class="i"><use href="#i-plus"/></svg>New</button>
     </div>
@@ -305,7 +376,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
     <section class="ledger" id="ledger" aria-label="Projects"></section>
     <div class="empty" id="emptyHome" hidden>
       <h2>Start your first project</h2>
-      <p>Add a YouTube video of the song and the tab or sheet music. Your notes, bookmarks and recorded takes live with it.</p>
+      <p>Add a YouTube video of the song and the tab or sheet music. Your snippets, notes and recorded takes live with it.</p>
       <button class="btn primary" id="newProjBtn2"><svg class="i"><use href="#i-plus"/></svg>New project</button>
     </div>
     <footer class="storage-note">
@@ -327,6 +398,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
     <button class="timer" id="timerBtn" title="Tap to pause or resume the practice timer">
       <span class="pulse"></span><span class="clock" id="timerClock">0:00:00</span><span class="tot" id="timerTotal"></span>
     </button>
+    <button class="btn icon" id="tunerBtn" aria-label="Tuner" title="Tuner" aria-pressed="false" hidden><svg class="i"><use href="#i-fork"/></svg></button>
     <button class="btn icon" id="metroBtn" aria-label="Metronome" title="Metronome" aria-pressed="false"><svg class="i"><use href="#i-metro"/></svg></button>
     <button class="btn icon" id="recBtn" aria-label="Record a take" title="Record a take"><span class="rec-dot"></span></button>
     <button class="btn icon" id="editBtn" aria-label="Edit project" title="Edit project"><svg class="i"><use href="#i-edit"/></svg></button>
@@ -353,6 +425,22 @@ input[type=range]{accent-color:var(--accent);width:100%}
       <button class="btn sm outline" id="tapBtn">Tap tempo</button>
       <button class="btn primary" id="metroToggle">Start</button>
     </div>
+  </div>
+
+  <div class="metro-pop tuner-pop" id="tunerPop" hidden>
+    <div class="seg sm" id="tunerInst" role="group" aria-label="Instrument"></div>
+    <div class="tread">
+      <div class="tnote" id="tNote">–</div>
+      <div class="tsub" id="tSub">Tap Listen, then play one string</div>
+      <div class="needle" aria-hidden="true"><span class="mid"></span><i id="tNeedle"></i></div>
+      <div class="tscale mono" aria-hidden="true"><span>−50</span><span>0</span><span>+50</span></div>
+    </div>
+    <div class="tstrings" id="tStrings"></div>
+    <div class="metro-row">
+      <span class="label">Tap a string to hear it</span>
+      <button class="btn primary" id="tListen">Listen</button>
+    </div>
+    <p class="err" id="tErr" hidden></p>
   </div>
 
   <section class="stage" id="stage">
@@ -388,11 +476,23 @@ input[type=range]{accent-color:var(--accent);width:100%}
 
       <div class="card tcard">
         <div class="tabs" role="tablist">
-          <button role="tab" data-tab="notes" aria-selected="true">Notes<span class="count" id="cNotes"></span></button>
-          <button role="tab" data-tab="marks" aria-selected="false">Bookmarks<span class="count" id="cMarks"></span></button>
+          <button role="tab" data-tab="snips" aria-selected="true">Snippets<span class="count" id="cSnips"></span></button>
+          <button role="tab" data-tab="notes" aria-selected="false">Notes<span class="count" id="cNotes"></span></button>
           <button role="tab" data-tab="takes" aria-selected="false">Takes<span class="count" id="cTakes"></span></button>
         </div>
-        <div class="tpane" data-pane="notes">
+        <div class="tpane" data-pane="snips">
+          <div id="snipList" class="snip-wrap">
+            <div class="snip-new">
+              <input type="text" id="snipName" placeholder="Name this loop, e.g. B part" aria-label="Snippet name" autocomplete="off">
+              <button class="btn sm primary" id="snipSave" disabled>Save loop</button>
+            </div>
+            <p class="hintline" id="snipHint" style="padding-top:0">Mark a section with A and B on the video, then save it as a snippet.</p>
+            <ul class="snips" id="snips"></ul>
+            <p class="hintline" id="snipHelp">Tap a snippet to loop it. Double-tap or hold it for notes, rating and recordings. To fine-tune its start or end, open it and tap the times.</p>
+          </div>
+          <div id="snipDetail" class="sd" hidden></div>
+        </div>
+        <div class="tpane" data-pane="notes" hidden>
           <div class="compose">
             <textarea id="noteText" rows="1" placeholder="Add a practice note…" aria-label="New note"></textarea>
             <div class="row">
@@ -402,13 +502,6 @@ input[type=range]{accent-color:var(--accent);width:100%}
           </div>
           <div class="search"><svg class="i"><use href="#i-search"/></svg><input type="search" id="noteSearch" placeholder="Search notes" aria-label="Search notes"></div>
           <ul class="notes" id="notes"></ul>
-        </div>
-        <div class="tpane" data-pane="marks" hidden>
-          <div class="row">
-            <input type="text" id="markLabel" placeholder="Label, e.g. Solo" aria-label="Bookmark label">
-            <button class="btn sm primary" id="addMark"><span id="addMarkLbl">Mark 0:00</span></button>
-          </div>
-          <ul class="marks" id="marks"></ul>
         </div>
         <div class="tpane" data-pane="takes" hidden>
           <button class="btn sm outline" id="recBtn2" style="justify-self:start;align-self:flex-start"><span class="rec-dot" style="width:9px;height:9px"></span>New take</button>
@@ -422,6 +515,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
         <select id="sheetSelect" aria-label="Choose sheet" hidden></select>
         <span class="one" id="sheetOne"></span>
         <span class="spacer"></span>
+        <button class="btn icon sm" id="nightBtn" aria-label="Night mode for sheet music" title="White on black" aria-pressed="true"><svg class="i"><use href="#i-moon"/></svg></button>
         <div class="sheet-tools row" style="gap:0">
           <button class="btn icon sm" id="zoomOut" aria-label="Zoom out"><svg class="i"><use href="#i-minus"/></svg></button>
           <button class="btn icon sm" id="zoomFit" aria-label="Fit width"><svg class="i"><use href="#i-fit"/></svg></button>
@@ -451,6 +545,11 @@ input[type=range]{accent-color:var(--accent);width:100%}
           <input type="text" id="wName" placeholder="e.g. Blackbird, fingerstyle" autocomplete="off">
         </label>
         <p class="err" id="wNameErr" hidden>Give the project a name to continue.</p>
+        <div class="field" id="wCoverWrap" hidden style="margin-top:18px">Cover
+          <div class="covers" id="wCovers"></div>
+          <input type="file" id="wCoverFile" accept="image/*" hidden>
+          <p class="hint" style="font-weight:400">Pick the picture shown for this project in your list. It uses the first video’s thumbnail unless you choose another.</p>
+        </div>
       </section>
       <section data-step="1" hidden>
         <p class="hint">Pick every instrument this project covers.</p>
@@ -518,6 +617,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
         <div class="recopts" id="recOpts">
           <label><input type="checkbox" id="recClick"> Metronome during take</label>
           <label><input type="checkbox" id="recCountIn"> Count in one bar</label>
+          <label id="recLoopWrap" hidden><input type="checkbox" id="recLoopSnip"> Play the snippet while recording</label>
         </div>
         <p class="hint" id="recHint">Tip: start the backing video first if you want to play along. Headphones keep it out of the take.</p>
         <p class="err" id="recErr" hidden></p>
@@ -703,6 +803,25 @@ const INSTRUMENTS = ['Electric guitar', 'Acoustic guitar', 'Classical guitar', '
 async function loadProjects() {
   S.projects = (await DB.all('projects')).sort((a, b) => (b.lastOpened || b.updatedAt) - (a.lastOpened || a.updatedAt));
 }
+/* ---------------- Project covers ---------------- */
+const ytThumb = (id) => `https://i.ytimg.com/vi/${id}/mqdefault.jpg`;
+function coverOf(p) {
+  const c = p.cover || {};
+  if (c.type === 'none') return null;
+  if (c.type === 'yt' && p.videos.some((v) => v.ytId === c.ytId)) return { yt: c.ytId };
+  if (c.type === 'blob' && (c.custom || p.sheets.some((s) => s.blobId === c.blobId))) return { blob: c.blobId };
+  if (p.videos[0]) return { yt: p.videos[0].ytId };
+  const img = p.sheets.find((s) => s.kind === 'image'); if (img) return { blob: img.blobId };
+  return null;
+}
+function coverImg(c) {
+  if (!c) return '';
+  if (c.yt) return `<img src="${ytThumb(c.yt)}" alt="" loading="lazy" onerror="this.remove()">`;
+  return `<img data-blob="${esc(c.blob)}" alt="" onerror="this.remove()">`;
+}
+async function fillBlobImgs(root) {
+  for (const im of root.querySelectorAll('img[data-blob]')) { const u = await blobUrl(im.dataset.blob); if (u) im.src = u; else im.remove(); }
+}
 function hue(str) { let h = 0; for (const c of str) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
 function renderHome() {
   const q = $('#projSearch').value.trim().toLowerCase();
@@ -715,12 +834,13 @@ function renderHome() {
   $('#ledger').innerHTML = list.map((p) => {
     const sub = [(p.instruments || []).join(', '), plural(p.videos.length, 'video'), plural(p.sheets.length, 'sheet'), plural(p.recordings.length, 'take')].filter(Boolean).join(' · ');
     return `<button class="proj" data-id="${esc(p.id)}">
-      <span class="art" style="--h:${hue(p.name)}">${esc((p.name.trim()[0] || '♪').toUpperCase())}</span>
+      <span class="art" style="--h:${hue(p.name)}">${esc((p.name.trim()[0] || '♪').toUpperCase())}${coverImg(coverOf(p))}</span>
       <span style="min-width:0;display:grid"><span class="name">${esc(p.name)}</span><span class="sub">${esc(sub || 'Empty project')}</span></span>
       <span class="when">${relDay(p.lastOpened)}</span>
       <span class="tot mono">${p.totalSeconds ? fmtDur(p.totalSeconds) : '–'}</span>
     </button>`;
   }).join('') || (n ? `<p class="muted" style="padding:12px">No project matches “${esc(q)}”.</p>` : '');
+  fillBlobImgs($('#ledger'));
   updateStorageLine();
 }
 async function updateStorageLine() {
@@ -759,6 +879,7 @@ async function openProject(p) {
   const fresh = !S.p;
   S.p = p;
   p.ui = p.ui || { v: 0, s: 0 };
+  migrateSnippets(p);
   $('#home').hidden = true; $('#project').hidden = false;
   if (fresh) {
     p.lastOpened = Date.now(); await saveProject(p);
@@ -767,11 +888,12 @@ async function openProject(p) {
   renderHeader();
   S.vIdx = Math.min(p.ui.v || 0, Math.max(0, p.videos.length - 1));
   S.sIdx = Math.min(p.ui.s || 0, Math.max(0, p.sheets.length - 1));
-  renderVideoPanel(); renderSheetPanel(); renderNotes(); renderTakes(); loadProjectMetro(p);
+  if (fresh) { S.snip = null; S.detail = null; }
+  renderVideoPanel(); renderSheetPanel(); renderNotes(); renderTakes(); loadProjectMetro(p); setupTuner(p);
 }
 async function closeProject() {
   if (!S.p) return;
-  stopTimer(true); metroStop(); $('#metroPop').hidden = true;
+  stopTimer(true); metroStop(); $('#metroPop').hidden = true; closeTuner(); S.snip = null; S.detail = null;
   try { S.player && S.player.stopVideo && S.player.stopVideo(); } catch {}
   clearInterval(S.pollT);
   await saveProject(S.p);
@@ -837,14 +959,14 @@ function renderVideoPanel() {
   const cv = p.videos[S.vIdx];
   $('#videoOne').textContent = p.videos.length === 1 ? (cv.label || cv.title || 'Video') : (has ? '' : 'Video');
   $('#videoOne').hidden = p.videos.length > 1;
-  if (!has) { try { S.player && S.player.stopVideo(); } catch {} return; }
+  if (!has) { try { S.player && S.player.stopVideo(); } catch {} S.snip = null; renderSnips(); return; }
   $('#ratePresets').innerHTML = PRESETS.map((r) => `<button class="btn sm" data-rate="${r}">${r === 1 ? '1×' : String(r).replace(/^0/, '') + '×'}</button>`).join('');
   mountVideo();
 }
 async function mountVideo() {
   const v = curVideo(); if (!v) return;
   if (v.rate == null) v.rate = LS.get('defaultRate', 1);
-  updateRateUI(); renderMarks(); updateLoopUI();
+  updateRateUI(); renderSnips(); updateLoopUI();
   try { await loadYT(); } catch {
     $('#yt').outerHTML = '<div id="yt" class="view-empty" style="color:#ddd">YouTube can’t load right now. Check your connection.</div>'; return;
   }
@@ -857,11 +979,13 @@ async function mountVideo() {
         onReady: () => { applyRate(); },
         onStateChange: (e) => {
           if (S.needRate && (e.data === 1 || e.data === 5 || e.data === 3)) { applyRate(); if (e.data === 1) S.needRate = false; }
-          if (e.data === 1) grabTitle();
+          if (e.data === 1) { grabTitle(); if (!S.detail && !S.durShown) { S.durShown = true; renderSnips(); } }
         },
         onPlaybackRateChange: (e) => {
-          const v = curVideo(); if (!v || S.needRate) return;
-          v.rate = e.data; LS.set('defaultRate', e.data); updateRateUI(); saveProject(S.p);
+          // Only a speed change made in YouTube's own menu counts; ignore echoes of our own changes.
+          const t = rateTarget(); if (!t || S.needRate || Date.now() - (S.rateSetAt || 0) < 1500) return;
+          if (Math.abs((t.rate || 1) - e.data) < 0.001) return;
+          t.rate = e.data; if (!S.snip) LS.set('defaultRate', e.data); updateRateUI(); renderSnips(); saveProject(S.p);
         }
       }
     });
@@ -871,9 +995,11 @@ async function mountVideo() {
   }
   clearInterval(S.pollT); S.pollT = setInterval(poll, 200);
 }
+const rateTarget = () => activeSnip() || curVideo();
 function applyRate() {
-  const v = curVideo(); if (!v || !S.player || !S.player.setPlaybackRate) return;
-  try { S.player.setPlaybackRate(v.rate); } catch {}
+  const t = rateTarget(); if (!t || !S.player || !S.player.setPlaybackRate) return;
+  S.rateSetAt = Date.now();
+  try { S.player.setPlaybackRate(t.rate || 1); } catch {}
 }
 function grabTitle() {
   const v = curVideo(); if (!v || v.title) return;
@@ -884,36 +1010,45 @@ function seek(t) { if (!S.player) return; try { S.player.seekTo(t, true); S.play
 function poll() {
   const v = curVideo(); if (!v) return;
   const t = now();
-  $('#addMarkLbl').textContent = 'Mark ' + fmtTime(t);
   const L = v.loop;
   if (L && L.on && L.a != null && L.b != null && L.b > L.a && t >= L.b) seek(L.a);
 }
-$('#videoSelect').onchange = (e) => { S.vIdx = +e.target.value; S.p.ui.v = S.vIdx; saveProject(S.p); mountVideo(); };
+$('#videoSelect').onchange = (e) => { S.vIdx = +e.target.value; S.p.ui.v = S.vIdx; S.snip = null; S.detail = null; S.durShown = false; saveProject(S.p); mountVideo(); };
 
 /* speed */
 function setRate(r) {
-  const v = curVideo(); if (!v) return;
+  const v = rateTarget(); if (!v) return;
   r = Math.round(Math.min(2, Math.max(0.25, r)) * 100) / 100;
-  v.rate = r; LS.set('defaultRate', r);
-  applyRate(); updateRateUI(); saveProject(S.p);
-  setTimeout(() => { try { const got = S.player.getPlaybackRate(); if (got && Math.abs(got - r) > 0.001) { v.rate = got; updateRateUI(); saveProject(S.p); } } catch {} }, 500);
+  v.rate = r; if (!S.snip) LS.set('defaultRate', r);
+  applyRate(); updateRateUI(); renderSnips(); saveProject(S.p);
+  setTimeout(() => { if (rateTarget() !== v) return; try { const got = S.player.getPlaybackRate(); if (got && Math.abs(got - r) > 0.001) { v.rate = got; updateRateUI(); renderSnips(); saveProject(S.p); } } catch {} }, 500);
 }
 function updateRateUI() {
-  const v = curVideo(); if (!v) return;
-  $('#rateVal').textContent = v.rate.toFixed(2) + '×';
-  $$('#ratePresets [data-rate]').forEach((b) => b.setAttribute('aria-pressed', Math.abs(+b.dataset.rate - v.rate) < 0.001));
+  const v = rateTarget(); if (!v) return;
+  const r = v.rate || 1;
+  $('#rateVal').textContent = r.toFixed(2) + '×';
+  $('#rateVal').title = S.snip ? 'Speed for this snippet' : 'Speed for the whole song';
+  $$('#ratePresets [data-rate]').forEach((b) => b.setAttribute('aria-pressed', Math.abs(+b.dataset.rate - r) < 0.001));
 }
-$('#rateDown').onclick = () => setRate((curVideo()?.rate || 1) - 0.05);
-$('#rateUp').onclick = () => setRate((curVideo()?.rate || 1) + 0.05);
+$('#rateDown').onclick = () => setRate((rateTarget()?.rate || 1) - 0.05);
+$('#rateUp').onclick = () => setRate((rateTarget()?.rate || 1) + 0.05);
 $('#ratePresets').onclick = (e) => { const b = e.target.closest('[data-rate]'); if (b) setRate(+b.dataset.rate); };
 
 /* loop */
 function updateLoopUI() {
   const v = curVideo(); const L = (v && v.loop) || {};
   $('#loopToggle').setAttribute('aria-pressed', !!L.on);
-  $('#loopRange').textContent = L.a != null || L.b != null ? `${L.a != null ? fmtTime(L.a) : '–'} → ${L.b != null ? fmtTime(L.b) : '–'}` : '';
+  const sn = activeSnip();
+  $('#loopRange').textContent = sn ? sn.name : L.a != null || L.b != null ? `${L.a != null ? fmtTime(L.a) : '–'} → ${L.b != null ? fmtTime(L.b) : '–'}` : '';
+  updateSnipSave();
 }
-function loopSet(k) { const v = curVideo(); if (!v) return; v.loop = v.loop || {}; v.loop[k] = Math.round(now() * 10) / 10; if (k === 'b' && v.loop.a != null && v.loop.b > v.loop.a) v.loop.on = true; updateLoopUI(); saveProject(S.p); }
+function loopSet(k) {
+  const v = curVideo(); if (!v) return; v.loop = v.loop || {};
+  const t = Math.round(now() * 10) / 10;
+  // Marking A or B always starts a new loop; a looping snippet is left unchanged.
+  if (S.snip) { S.snip = null; v.loop = {}; applyRate(); updateRateUI(); renderSnips(); }
+  v.loop[k] = t; if (k === 'b' && v.loop.a != null && v.loop.b > v.loop.a) v.loop.on = true; updateLoopUI(); saveProject(S.p);
+}
 $('#setA').onclick = () => loopSet('a');
 $('#setB').onclick = () => loopSet('b');
 $('#loopToggle').onclick = () => {
@@ -921,35 +1056,408 @@ $('#loopToggle').onclick = () => {
   if (v.loop.a == null || v.loop.b == null || v.loop.b <= v.loop.a) { toast('Set A, then B a little later, to loop a section'); return; }
   v.loop.on = !v.loop.on; if (v.loop.on) seek(v.loop.a); updateLoopUI(); saveProject(S.p);
 };
-$('#loopClear').onclick = () => { const v = curVideo(); if (!v) return; v.loop = {}; updateLoopUI(); saveProject(S.p); };
+$('#loopClear').onclick = () => { const v = curVideo(); if (!v) return; if (S.snip) { stopSnip(false); toast('Back to the whole song'); return; } v.loop = {}; updateLoopUI(); saveProject(S.p); };
 
-/* bookmarks */
-function renderMarks() {
-  const v = curVideo(); const ms = (v && v.bookmarks) || [];
-  $('#marks').innerHTML = ms.length ? ms.map((m) => `
-    <li><button class="t" data-seek="${m.t}">${fmtTime(m.t)}</button><span class="lbl">${esc(m.label)}</span>
-    <button class="linkish" data-loop="${m.id}" title="Start the A–B loop here">Loop</button>
-    <button class="linkish" data-del="${m.id}" aria-label="Delete bookmark">Delete</button></li>`).join('')
-    : '<li class="hintline">Play to a spot, add a label, and tap Mark.</li>';
-  $('#cMarks').textContent = ms.length || '';
-}
-function addMark() {
-  const v = curVideo(); if (!v) return;
-  v.bookmarks = v.bookmarks || [];
-  const t = Math.round(now() * 10) / 10;
-  v.bookmarks.push({ id: uid(), t, label: $('#markLabel').value.trim() || 'Bookmark ' + (v.bookmarks.length + 1) });
-  v.bookmarks.sort((a, b) => a.t - b.t);
-  $('#markLabel').value = ''; renderMarks(); saveProject(S.p);
-}
-$('#addMark').onclick = addMark;
-$('#markLabel').onkeydown = (e) => { if (e.key === 'Enter') addMark(); };
-$('#marks').onclick = (e) => {
-  const v = curVideo(); const b = e.target.closest('button'); if (!b || !v) return;
-  if (b.dataset.seek != null) seek(+b.dataset.seek);
-  if (b.dataset.del) { v.bookmarks = v.bookmarks.filter((m) => m.id !== b.dataset.del); renderMarks(); saveProject(S.p); }
-  if (b.dataset.loop) { const m = v.bookmarks.find((x) => x.id === b.dataset.loop); v.loop = { a: m.t, b: null, on: false }; updateLoopUI(); saveProject(S.p); seek(m.t); toast('A set to ' + fmtTime(m.t) + '. Tap Set B where the loop should end.'); }
-};
 $('#addVideoBtn').onclick = $('#addVideoBtn2').onclick = () => openWizard(S.p, 2);
+
+/* ---------------- Snippets (named loops with their own speed, notes, rating and attempts) ---------------- */
+const curSnips = () => { const v = curVideo(); return v ? (v.snippets = v.snippets || []) : []; };
+const findSnip = (id) => curSnips().find((s) => s.id === id);
+const activeSnip = () => (S.snip ? findSnip(S.snip) : null);
+const fmtT1 = (t) => { t = Math.max(0, t || 0); const m = Math.floor(t / 60), s = t - m * 60; return m + ':' + (s < 10 ? '0' : '') + s.toFixed(1); };
+const snipRange = (s) => s.b != null ? `${fmtTime(s.a)}–${fmtTime(s.b)}` : `from ${fmtTime(s.a)}`;
+const rateTxt = (r) => (r === 1 ? '1' : String(+r.toFixed(2)).replace(/^0/, '')) + '×';
+function ratingColor(v) { const h = Math.round(((v - 1) / 9) * 120); return { c: `hsl(${h} 68% 46%)`, ci: v >= 4 && v <= 8 ? '#1a1404' : '#fff' }; }
+const sameDay = (a, b) => new Date(a).toDateString() === new Date(b).toDateString();
+
+function migrateSnippets(p) {
+  for (const v of p.videos) {
+    v.snippets = v.snippets || [];
+    if (v.bookmarks && v.bookmarks.length) {
+      for (const b of v.bookmarks) v.snippets.push({ id: uid(), name: b.label, a: b.t, b: null, rate: v.rate || 1, rating: null, ratings: [], comments: [], createdAt: Date.now() });
+      v.snippets.sort((x, y) => x.a - y.a);
+    }
+    delete v.bookmarks;
+  }
+}
+
+function playSnip(s) {
+  const v = curVideo(); if (!v || !s) return;
+  S.snip = s.id;
+  v.loop = { a: s.a, b: s.b, on: s.b != null };
+  s.lastPracticed = Date.now(); S.p.ui.snip = s.id;
+  applyRate(); seek(s.a); setTimeout(applyRate, 300);
+  updateRateUI(); updateLoopUI(); renderSnips(); saveProject(S.p);
+}
+function stopSnip(fromStart) {
+  const v = curVideo(); if (!v) return;
+  S.snip = null; v.loop = {};
+  applyRate(); updateRateUI(); updateLoopUI(); renderSnips(); saveProject(S.p);
+  if (fromStart) seek(0);
+}
+
+function updateSnipSave() {
+  const v = curVideo(); const L = (v && v.loop) || {};
+  const ok = L.a != null && L.b != null && L.b > L.a && !S.snip;
+  $('#snipSave').disabled = !ok;
+  $('#snipHint').hidden = ok || !!S.snip;
+}
+function saveSnip() {
+  const v = curVideo(); const L = (v && v.loop) || {};
+  if (!(L.a != null && L.b != null && L.b > L.a)) { toast('Set A and B on the video first'); return; }
+  const list = curSnips();
+  const s = { id: uid(), name: $('#snipName').value.trim() || 'Snippet ' + (list.length + 1), a: L.a, b: L.b, rate: v.rate || 1, rating: null, ratings: [], comments: [], createdAt: Date.now() };
+  list.push(s); list.sort((x, y) => x.a - y.a);
+  $('#snipName').value = '';
+  playSnip(s); askPersist();
+  toast(`Saved “${s.name}”`);
+}
+$('#snipSave').onclick = saveSnip;
+$('#snipName').onkeydown = (e) => { if (e.key === 'Enter') saveSnip(); };
+
+function renderSnips() {
+  const list = curSnips(); const v = curVideo();
+  $('#cSnips').textContent = list.length || '';
+  updateSnipSave();
+  if (S.detail) { if (findSnip(S.detail)) return renderDetail(); S.detail = null; }
+  $('#snipList').hidden = false; $('#snipDetail').hidden = true;
+  if (!v) { $('#snips').innerHTML = ''; $('#snipHelp').hidden = true; return; }
+  let dur = 0; try { dur = S.player && S.player.getDuration ? S.player.getDuration() : 0; } catch {}
+  const eq = '<span class="eq" aria-hidden="true"><i></i><i></i><i></i></span>';
+  const whole = `<li class="snip whole ${S.snip ? '' : 'on'}" data-whole>
+      <span class="chip"><svg class="i"><use href="#i-play"/></svg></span>
+      <span class="body"><span class="nm">Whole song${eq}</span><span class="meta">${dur ? fmtTime(dur) + ' · ' : ''}${rateTxt(v.rate || 1)}</span></span></li>`;
+  $('#snips').innerHTML = whole + list.map((s) => {
+    const col = s.rating ? ratingColor(s.rating) : null;
+    const last = S.p.ui.snip === s.id && S.snip !== s.id ? ' · <span class="last">last practiced</span>' : '';
+    return `<li class="snip ${S.snip === s.id ? 'on' : ''}" data-id="${s.id}">
+      <span class="chip" ${col ? `style="--c:${col.c};--ci:${col.ci}"` : ''} title="${s.rating ? 'Rated ' + s.rating + ' of 10' : 'Not rated yet'}">${s.rating || '–'}</span>
+      <span class="body"><span class="nm">${esc(s.name)}${eq}</span><span class="meta">${snipRange(s)} · ${rateTxt(s.rate || 1)}${last}</span></span>
+      <button class="more" data-open aria-label="Open ${esc(s.name)}"><svg class="i"><use href="#i-chev"/></svg></button></li>`;
+  }).join('');
+  $('#snipHelp').hidden = list.length === 0;
+}
+
+/* tap = loop it; double-tap, long-press or right-click = open details */
+const tapState = { id: null, t: 0, timer: 0, longFired: false, x: 0, y: 0 };
+$('#snips').addEventListener('pointerdown', (e) => {
+  tapState.longFired = false;
+  const li = e.target.closest('.snip[data-id]'); if (!li || e.target.closest('.more')) return;
+  tapState.x = e.clientX; tapState.y = e.clientY;
+  clearTimeout(tapState.timer);
+  tapState.timer = setTimeout(() => { tapState.longFired = true; tapState.longAt = Date.now(); openDetail(li.dataset.id); }, 500);
+});
+const cancelHold = () => clearTimeout(tapState.timer);
+$('#snips').addEventListener('pointerup', cancelHold);
+$('#snips').addEventListener('pointercancel', cancelHold);
+$('#snips').addEventListener('pointerleave', cancelHold);
+$('#snips').addEventListener('pointermove', (e) => { if (Math.hypot(e.clientX - tapState.x, e.clientY - tapState.y) > 10) cancelHold(); });
+$('#snips').addEventListener('contextmenu', (e) => { const li = e.target.closest('.snip[data-id]'); if (li) { e.preventDefault(); if (!tapState.longFired) openDetail(li.dataset.id); } });
+$('#snips').addEventListener('click', (e) => {
+  const swallow = tapState.longFired && Date.now() - tapState.longAt < 900;
+  tapState.longFired = false;
+  if (swallow) return;
+  const li = e.target.closest('.snip'); if (!li) return;
+  if (li.dataset.whole != null) { stopSnip(true); return; }
+  const id = li.dataset.id;
+  if (e.target.closest('.more')) { openDetail(id); return; }
+  const t = Date.now();
+  if (tapState.id === id && t - tapState.t < 350) { tapState.id = null; openDetail(id); return; }
+  tapState.id = id; tapState.t = t;
+  if (S.snip !== id) playSnip(findSnip(id)); else seek(findSnip(id).a);
+});
+
+function openDetail(id) { if (!findSnip(id)) return; S.detail = id; showTab('snips'); renderDetail(); $('.tpane[data-pane="snips"]').scrollTop = 0; }
+function closeDetail() { S.detail = null; renderSnips(); }
+
+function histSvg(r) {
+  const W = 300, H = 54, pad = 6;
+  const x = (i) => r.length === 1 ? W / 2 : pad + (i * (W - 2 * pad)) / (r.length - 1);
+  const y = (v) => H - pad - ((v - 1) / 9) * (H - 2 * pad);
+  const pts = r.map((e, i) => `${x(i).toFixed(1)},${y(e.v).toFixed(1)}`).join(' ');
+  const grid = [1, 5.5, 10].map((v) => `<line x1="0" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-width="1"/>`).join('');
+  const dots = r.map((e, i) => `<circle cx="${x(i)}" cy="${y(e.v)}" r="${i === r.length - 1 ? 5 : 3.5}" fill="${ratingColor(e.v).c}"/>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="Rating history">${grid}<polyline points="${pts}" fill="none" stroke="var(--muted)" stroke-width="1.5" vector-effect="non-scaling-stroke"/>${dots}</svg>`;
+}
+
+function renderDetail() {
+  const s = findSnip(S.detail); if (!s) return closeDetail();
+  $('#snipList').hidden = true; const d = $('#snipDetail'); d.hidden = false;
+  const r = s.ratings || [];
+  const bar = Array.from({ length: 10 }, (_, i) => {
+    const v = i + 1, col = ratingColor(v);
+    return `<button data-rate="${v}" class="${s.rating && v <= s.rating ? 'lit' : ''} ${s.rating === v ? 'sel' : ''}" style="--c:${col.c};--ci:${col.ci}" aria-label="Rate ${v} of 10" aria-pressed="${s.rating === v}">${v}</button>`;
+  }).join('');
+  let hist = '<p class="hintline" style="padding:0">Rate how well you can play it. Rate it again on later days to see your progress.</p>';
+  if (r.length === 1) hist = `<p class="hintline" style="padding:0">Rated ${r[0].v} on ${dayFmt.format(r[0].ts)}. Rate it again on another day to start a progress line.</p>`;
+  if (r.length > 1) hist = `<div class="hist">${histSvg(r.slice(-30))}<div class="cap"><span>${r[0].v} on ${dayFmt.format(r[0].ts)}</span><span>${r.length} ratings</span><span>now ${r[r.length - 1].v}</span></div></div>`;
+  const isOn = S.snip === s.id;
+  d.innerHTML = `
+    <div class="sd-head">
+      <button class="btn icon sm" data-act="back" aria-label="Back to all snippets" title="All snippets"><svg class="i"><use href="#i-back"/></svg></button>
+      <input type="text" id="sdName" value="${esc(s.name)}" aria-label="Snippet name" autocomplete="off">
+    </div>
+    <div class="sd-sec">
+      <div class="sd-range">
+        <span class="nudge"><button data-act="a-" aria-label="Start earlier">−</button><button class="v" data-act="a=" title="Tap to start at the current video time">${fmtT1(s.a)}</button><button data-act="a+" aria-label="Start later">+</button></span>
+        <span class="muted">to</span>
+        ${s.b != null
+          ? `<span class="nudge"><button data-act="b-" aria-label="End earlier">−</button><button class="v" data-act="b=" title="Tap to end at the current video time">${fmtT1(s.b)}</button><button data-act="b+" aria-label="End later">+</button></span>`
+          : `<button class="btn sm outline" data-act="setb">Set end here</button>`}
+      </div>
+      <div class="foot-row">
+        <button class="btn sm ${isOn ? 'outline' : 'primary'}" data-act="play"><svg class="i"><use href="#i-play"/></svg>${isOn ? 'Restart loop' : 'Loop it'}</button>
+        <span class="mono muted" style="font-size:12px">${rateTxt(s.rate || 1)}${s.lastPracticed ? ' · ' + relDay(s.lastPracticed).toLowerCase() : ''}</span>
+      </div>
+    </div>
+    <div class="sd-sec">
+      <span class="label">How well can you play it?</span>
+      <div class="ratebar">${bar}</div>
+      ${hist}
+    </div>
+    <div class="sd-sec">
+      <span class="label">Notes</span>
+      <div class="compose">
+        <textarea id="sdNote" rows="1" placeholder="What’s tricky here? Fingering, timing…" aria-label="New note for this snippet"></textarea>
+        <div class="row" style="justify-content:flex-end"><button class="btn sm primary" data-act="note">Add</button></div>
+      </div>
+      <ul class="notes" id="sdNotes"></ul>
+    </div>
+    <div class="sd-sec">
+      <div class="foot-row"><span class="label">Recorded attempts</span><button class="btn sm outline" data-act="rec"><span class="rec-dot" style="width:9px;height:9px"></span>Record</button></div>
+      <ul class="takes" id="sdTakes"></ul>
+    </div>
+    <button class="btn sm danger" data-act="del" style="align-self:flex-start">Delete snippet</button>`;
+  const cm = [...(s.comments || [])].sort((a, b) => b.ts - a.ts);
+  $('#sdNotes').innerHTML = cm.length ? noteItems(cm, '') : '<li class="hintline">Notes here are stamped with the date and time.</li>';
+  const ta = $('#sdNote');
+  ta.addEventListener('input', () => { ta.style.height = 'auto'; ta.style.height = Math.min(160, ta.scrollHeight) + 'px'; });
+  ta.addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) addSnipNote(); });
+  $('#sdName').addEventListener('change', (e) => { s.name = e.target.value.trim() || s.name; e.target.value = s.name; saveProject(S.p); });
+  fillTakes($('#sdTakes'), S.p.recordings.filter((x) => x.snippetId === s.id), 'No attempts yet. Record one to hear how it compares.');
+}
+function addSnipNote() {
+  const s = findSnip(S.detail); const t = $('#sdNote').value.trim(); if (!s || !t) return;
+  (s.comments = s.comments || []).push({ id: uid(), ts: Date.now(), text: t });
+  saveProject(S.p); renderDetail();
+}
+function rateSnip(s, v) {
+  s.ratings = s.ratings || [];
+  const last = s.ratings[s.ratings.length - 1];
+  if (last && sameDay(last.ts, Date.now())) { last.v = v; last.ts = Date.now(); } else s.ratings.push({ ts: Date.now(), v });
+  s.rating = v; saveProject(S.p); renderDetail();
+}
+function nudge(s, k, d) {
+  const v = Math.max(0, Math.round((s[k] + d) * 10) / 10);
+  if (k === 'a' && s.b != null && v >= s.b - 0.2) return;
+  if (k === 'b' && v <= s.a + 0.2) return;
+  s[k] = v;
+  if (S.snip === s.id) { curVideo().loop = { a: s.a, b: s.b, on: s.b != null }; updateLoopUI(); if (k === 'a') seek(s.a); }
+  saveProject(S.p); renderDetail();
+}
+$('#snipDetail').addEventListener('click', async (e) => {
+  const s = findSnip(S.detail); if (!s) return;
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.rate) return rateSnip(s, +b.dataset.rate);
+  if (b.dataset.t) return seek(+b.dataset.t);
+  if (b.dataset.del && b.closest('#sdNotes')) {
+    if (await confirmBox('Delete this note?', 'This can’t be undone.')) { s.comments = s.comments.filter((c) => c.id !== b.dataset.del); saveProject(S.p); renderDetail(); }
+    return;
+  }
+  switch (b.dataset.act) {
+    case 'back': return closeDetail();
+    case 'play': return playSnip(s), renderDetail();
+    case 'a-': return nudge(s, 'a', -0.25);
+    case 'a+': return nudge(s, 'a', 0.25);
+    case 'b-': return nudge(s, 'b', -0.25);
+    case 'b+': return nudge(s, 'b', 0.25);
+    case 'a=': case 'b=': {
+      const k = b.dataset.act[0], t = Math.round(now() * 10) / 10;
+      if (k === 'a' && s.b != null && t >= s.b - 0.2) { toast('Play to a spot before the end, then tap the start time'); return; }
+      if (k === 'b' && t <= s.a + 0.2) { toast('Play past the start, then tap the end time'); return; }
+      s[k] = t;
+      if (S.snip === s.id) { curVideo().loop = { a: s.a, b: s.b, on: s.b != null }; updateLoopUI(); }
+      saveProject(S.p); renderDetail(); toast(`${k === 'a' ? 'Start' : 'End'} set to ${fmtT1(t)}`); return;
+    }
+    case 'setb': { const t = Math.round(now() * 10) / 10; if (t <= s.a + 0.2) { toast('Play past the start point first, then tap Set end'); return; } s.b = t; if (S.snip === s.id) { curVideo().loop = { a: s.a, b: s.b, on: true }; updateLoopUI(); } saveProject(S.p); renderDetail(); return; }
+    case 'note': return addSnipNote();
+    case 'rec': return openRecorder(s.id);
+    case 'del': {
+      if (!await confirmBox(`Delete “${s.name}”?`, 'Its notes, ratings and recorded attempts are removed from this device.')) return;
+      for (const r of S.p.recordings.filter((x) => x.snippetId === s.id)) await DB.del('blobs', r.blobId);
+      S.p.recordings = S.p.recordings.filter((x) => x.snippetId !== s.id);
+      const v = curVideo(); v.snippets = v.snippets.filter((x) => x !== s);
+      if (S.snip === s.id) { S.snip = null; v.loop = {}; applyRate(); updateRateUI(); updateLoopUI(); }
+      S.detail = null; await saveProject(S.p); renderSnips(); renderTakes(); toast('Snippet deleted');
+    }
+  }
+});
+
+/* ---------------- Keyboard: space = play/pause, arrows = move through the track ---------------- */
+document.addEventListener('keydown', (e) => {
+  if (!S.p || !S.player || document.querySelector('dialog[open]') || e.metaKey || e.ctrlKey || e.altKey) return;
+  const t = e.target;
+  if (/INPUT|TEXTAREA|SELECT/.test(t.tagName) || t.isContentEditable) return;
+  if (e.code === 'Space') {
+    e.preventDefault();
+    try { S.player.getPlayerState() === 1 ? S.player.pauseVideo() : S.player.playVideo(); } catch {}
+  } else if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') {
+    e.preventDefault();
+    const d = (e.shiftKey ? 1 : 5) * (e.code === 'ArrowLeft' ? -1 : 1);
+    try { let dur = S.player.getDuration() || Infinity; S.player.seekTo(Math.min(dur - 0.5, Math.max(0, now() + d)), true); } catch {}
+  }
+});
+
+/* ---------------- Night mode for sheet music ---------------- */
+function applyNight() {
+  const on = LS.get('night', true);
+  $('#sheetView').classList.toggle('night', on);
+  $('#nightBtn').setAttribute('aria-pressed', on);
+  $('#nightBtn').title = on ? 'Showing white on black. Tap for black on white.' : 'Showing black on white. Tap for white on black.';
+}
+$('#nightBtn').onclick = () => { LS.set('night', !LS.get('night', true)); applyNight(); };
+applyNight();
+
+/* ---------------- Tuner: microphone pitch detection + reference tones ---------------- */
+const TUNINGS = {
+  guitar: { name: 'Guitar', notes: ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'] },
+  bass: { name: 'Bass', notes: ['E1', 'A1', 'D2', 'G2'] },
+  violin: { name: 'Fiddle', notes: ['G3', 'D4', 'A4', 'E5'] },
+  mandolin: { name: 'Mandolin', notes: ['G3', 'D4', 'A4', 'E5'] },
+  ukulele: { name: 'Ukulele', notes: ['G4', 'C4', 'E4', 'A4'] },
+  banjo: { name: 'Banjo', notes: ['G4', 'D3', 'G3', 'B3', 'D4'] },
+  cello: { name: 'Cello', notes: ['C2', 'G2', 'D3', 'A3'] }
+};
+function tuningKey(name) {
+  const n = name.toLowerCase();
+  if (n.includes('bass')) return 'bass';
+  if (n.includes('guitar')) return 'guitar';
+  if (n.includes('violin') || n.includes('fiddle')) return 'violin';
+  if (n.includes('mandolin')) return 'mandolin';
+  if (n.includes('ukulele') || n.includes('uke')) return 'ukulele';
+  if (n.includes('banjo')) return 'banjo';
+  if (n.includes('cello')) return 'cello';
+  return null;
+}
+const NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+function noteMidi(n) { const m = n.match(/^([A-G])(#?)(-?\d)$/); return 12 * (+m[3] + 1) + 'C D EF G A B'.indexOf(m[1]) + (m[2] ? 1 : 0); }
+const midiFreq = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const T = { keys: [], key: null, ac: null, stream: null, an: null, buf: null, timer: 0, hist: [], lastSeen: 0, tone: null, toneIdx: -1 };
+
+function setupTuner(p) {
+  T.keys = [...new Set((p.instruments || []).map(tuningKey).filter(Boolean))];
+  $('#tunerBtn').hidden = T.keys.length === 0;
+  T.key = T.keys.includes(p.ui.tuner) ? p.ui.tuner : T.keys[0] || null;
+  renderTuner();
+}
+function renderTuner() {
+  if (!T.key) return;
+  const inst = $('#tunerInst');
+  inst.hidden = T.keys.length < 2;
+  inst.innerHTML = T.keys.map((k) => `<button data-k="${k}" aria-pressed="${k === T.key}">${TUNINGS[k].name}</button>`).join('');
+  $('#tStrings').innerHTML = TUNINGS[T.key].notes.map((n, i) => {
+    const m = noteMidi(n); return `<button data-i="${i}" aria-label="Play ${NOTE_NAMES[m % 12]} string">${NOTE_NAMES[m % 12]}<sub>${Math.floor(m / 12) - 1}</sub></button>`;
+  }).join('');
+}
+$('#tunerInst').onclick = (e) => { const b = e.target.closest('[data-k]'); if (!b) return; T.key = b.dataset.k; S.p.ui.tuner = T.key; saveProject(S.p); stopTone(); renderTuner(); };
+function tunerCtx() { if (!T.ac) T.ac = new (window.AudioContext || window.webkitAudioContext)(); if (T.ac.state !== 'running') T.ac.resume(); return T.ac; }
+
+function stopTone() {
+  if (T.tone) { const { g, oscs } = T.tone, t = T.ac.currentTime; try { g.gain.cancelScheduledValues(t); g.gain.setTargetAtTime(0.0001, t, 0.03); oscs.forEach((o) => o.stop(t + 0.2)); } catch {} }
+  T.tone = null; T.toneIdx = -1; $$('#tStrings button').forEach((b) => b.classList.remove('playing'));
+}
+function playTone(i) {
+  const ac = tunerCtx(); const was = T.toneIdx; stopTone(); if (was === i) return;
+  const f = midiFreq(noteMidi(TUNINGS[T.key].notes[i])), t = ac.currentTime;
+  const g = ac.createGain(), lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = Math.min(8000, f * 8);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.01); g.gain.exponentialRampToValueAtTime(0.12, t + 0.6); g.gain.exponentialRampToValueAtTime(0.0001, t + 4);
+  const oscs = [[1, 'triangle', 1], [2, 'sine', 0.35], [3, 'sine', 0.12]].map(([h, type, amp]) => {
+    const o = ac.createOscillator(), og = ac.createGain(); o.type = type; o.frequency.value = f * h; og.gain.value = amp; o.connect(og); og.connect(lp); o.start(t); o.stop(t + 4.1); return o;
+  });
+  lp.connect(g); g.connect(ac.destination);
+  T.tone = { g, oscs }; T.toneIdx = i;
+  $(`#tStrings [data-i="${i}"]`).classList.add('playing');
+  oscs[0].onended = () => { if (T.toneIdx === i) { T.tone = null; T.toneIdx = -1; const b = $(`#tStrings [data-i="${i}"]`); b && b.classList.remove('playing'); } };
+}
+$('#tStrings').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b) playTone(+b.dataset.i); };
+
+// YIN pitch detection on a 4096-sample window, about 15 times a second.
+function detectPitch(x, sr) {
+  const W = 2048, minLag = Math.floor(sr / 1400), maxLag = Math.min(Math.floor(sr / 35), x.length - W - 1);
+  let rms = 0; for (let i = 0; i < W; i++) rms += x[i] * x[i]; rms = Math.sqrt(rms / W);
+  if (rms < 0.008) return null;
+  const d = new Float32Array(maxLag + 1);
+  for (let tau = 1; tau <= maxLag; tau++) { let sum = 0; for (let j = 0; j < W; j++) { const v = x[j] - x[j + tau]; sum += v * v; } d[tau] = sum; }
+  let run = 0, best = -1; const cm = new Float32Array(maxLag + 1); cm[0] = 1;
+  for (let tau = 1; tau <= maxLag; tau++) { run += d[tau]; cm[tau] = run ? (d[tau] * tau) / run : 1; }
+  for (let tau = minLag; tau <= maxLag; tau++) {
+    if (cm[tau] < 0.15) { while (tau + 1 <= maxLag && cm[tau + 1] < cm[tau]) tau++; best = tau; break; }
+  }
+  if (best < 0) return null;
+  const a = cm[best - 1] ?? cm[best], b = cm[best], c = cm[best + 1] ?? cm[best];
+  const shift = (a - 2 * b + c) ? (a - c) / (2 * (a - 2 * b + c)) : 0;
+  return sr / (best + shift);
+}
+function tunerFrame() {
+  T.an.getFloatTimeDomainData(T.buf);
+  const f = detectPitch(T.buf, T.ac.sampleRate);
+  if (f) { T.hist.push(f); if (T.hist.length > 5) T.hist.shift(); T.lastSeen = Date.now(); }
+  else if (Date.now() - T.lastSeen > 700) { T.hist = []; }
+  showPitch(T.hist.length >= 2 ? [...T.hist].sort((p, q) => p - q)[T.hist.length >> 1] : null);
+}
+function showPitch(f) {
+  const needle = $('.needle'), dot = $('#tNeedle');
+  $$('#tStrings button').forEach((b) => b.classList.remove('near'));
+  if (!f) { needle.classList.remove('live'); if (T.stream) { $('#tNote').innerHTML = '–'; $('#tNote').style.color = ''; $('#tSub').textContent = 'Listening… play one string'; } return; }
+  const midi = 69 + 12 * Math.log2(f / 440);
+  const strings = TUNINGS[T.key].notes.map(noteMidi);
+  let si = -1, bd = 99; strings.forEach((m, i) => { const dd = Math.abs(midi - m); if (dd < bd) { bd = dd; si = i; } });
+  let target, label;
+  if (bd <= 3.5) { target = strings[si]; label = 'string'; $(`#tStrings [data-i="${si}"]`).classList.add('near'); }
+  else { target = Math.round(midi); label = 'note'; }
+  const cents = Math.round((midi - target) * 100);
+  const nm = NOTE_NAMES[target % 12], oct = Math.floor(target / 12) - 1;
+  const col = Math.abs(cents) <= 5 ? 'hsl(120 60% 50%)' : Math.abs(cents) <= 15 ? 'var(--accent)' : 'var(--rec)';
+  $('#tNote').innerHTML = `${nm}<sub>${oct}</sub>`; $('#tNote').style.color = col;
+  $('#tSub').textContent = Math.abs(cents) <= 5 ? 'In tune' : `${Math.abs(cents)} cents ${cents < 0 ? 'flat · tune up' : 'sharp · tune down'}`;
+  needle.classList.add('live'); dot.style.background = col;
+  dot.style.left = 50 + Math.max(-50, Math.min(50, cents)) + '%';
+}
+async function startListening() {
+  $('#tErr').hidden = true;
+  try {
+    T.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+  } catch (err) {
+    $('#tErr').textContent = err && err.name === 'NotAllowedError' ? 'Woodshed needs the microphone to hear your instrument. Allow it in the browser’s site settings, or use the reference tones.' : 'Couldn’t start the microphone. Use the reference tones instead.';
+    $('#tErr').hidden = false; return;
+  }
+  const ac = tunerCtx();
+  T.an = ac.createAnalyser(); T.an.fftSize = 4096; T.buf = new Float32Array(T.an.fftSize);
+  T.src = ac.createMediaStreamSource(T.stream); T.src.connect(T.an);
+  T.hist = []; clearInterval(T.timer); T.timer = setInterval(tunerFrame, 66);
+  $('#tListen').textContent = 'Stop'; $('#tunerBtn').classList.add('running'); $('#tSub').textContent = 'Listening… play one string';
+}
+function stopListening() {
+  clearInterval(T.timer); T.timer = 0;
+  if (T.stream) T.stream.getTracks().forEach((t) => t.stop());
+  try { T.src && T.src.disconnect(); } catch {}
+  T.stream = null; T.src = null; T.hist = [];
+  $('#tListen').textContent = 'Listen'; $('#tunerBtn').classList.remove('running');
+  $('.needle').classList.remove('live'); $('#tNote').innerHTML = '–'; $('#tNote').style.color = ''; $('#tSub').textContent = 'Tap Listen, then play one string';
+  $$('#tStrings button').forEach((b) => b.classList.remove('near'));
+}
+$('#tListen').onclick = () => (T.stream ? stopListening() : startListening());
+function closeTuner() { $('#tunerPop').hidden = true; $('#tunerBtn').setAttribute('aria-pressed', false); stopListening(); stopTone(); }
+$('#tunerBtn').onclick = (e) => {
+  e.stopPropagation();
+  const p = $('#tunerPop');
+  if (!p.hidden) return closeTuner();
+  $('#metroPop').hidden = true; $('#metroBtn').setAttribute('aria-pressed', false);
+  p.hidden = false; $('#tunerBtn').setAttribute('aria-pressed', true);
+};
+document.addEventListener('pointerdown', (e) => {
+  const p = $('#tunerPop'); if (!p.hidden && !p.contains(e.target) && !$('#tunerBtn').contains(e.target)) closeTuner();
+});
 
 /* ---------------- Sheet panel ---------------- */
 function renderSheetPanel() {
@@ -1040,15 +1548,18 @@ function renderNotes() {
   const list = [...p.comments].sort((a, b) => b.ts - a.ts).filter((c) => !q || c.text.toLowerCase().includes(q.toLowerCase()));
   $('#cNotes').textContent = p.comments.length || '';
   $('#noteSearch').parentElement.hidden = p.comments.length < 2 && !q;
+  $('#notes').innerHTML = list.length ? noteItems(list, q)
+    : `<li class="hintline">${q ? 'No notes contain “' + esc(q) + '”.' : 'Notes are stamped with the date and time, newest on top.'}</li>`;
+}
+function noteItems(list, q) {
   const rx = q ? new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi') : null;
   const hl = (t) => rx ? esc(t).replace(new RegExp(esc(q).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi'), (m) => `<mark>${m}</mark>`) : esc(t);
   const body = (text) => text.split(/(\[\d{1,2}:\d{2}(?::\d{2})?\])/g).map((seg) => {
     const m = seg.match(/^\[(\d{1,2}:\d{2}(?::\d{2})?)\]$/);
     return m ? `<button class="ttag" data-t="${parseTime(m[1])}" title="Jump the video here">${m[1]}</button>` : hl(seg);
   }).join('');
-  $('#notes').innerHTML = list.length ? list.map((c) => `
-    <li><time datetime="${new Date(c.ts).toISOString()}"><span>${dateFmt.format(c.ts)}</span><button class="linkish" data-del="${c.id}">Delete</button></time><p>${body(c.text)}</p></li>`).join('')
-    : `<li class="hintline">${q ? 'No notes contain “' + esc(q) + '”.' : 'Notes are stamped with the date and time, newest on top.'}</li>`;
+  return list.map((c) => `
+    <li><time datetime="${new Date(c.ts).toISOString()}"><span>${dateFmt.format(c.ts)}</span><button class="linkish" data-del="${c.id}">Delete</button></time><p>${body(c.text)}</p></li>`).join('');
 }
 function addNote() {
   const t = $('#noteText').value.trim(); if (!t) return;
@@ -1126,7 +1637,7 @@ function setBpm(v) {
   if (S.p) { S.p.metro = { bpm: M.bpm, beats: M.beats }; saveProject(S.p); }
   $('#bpmVal').textContent = M.bpm; $('#bpmRange').value = M.bpm;
 }
-$('#metroBtn').onclick = (e) => { e.stopPropagation(); const p = $('#metroPop'); p.hidden = !p.hidden; $('#metroBtn').setAttribute('aria-pressed', !p.hidden); metroUI(); };
+$('#metroBtn').onclick = (e) => { e.stopPropagation(); const p = $('#metroPop'); if (p.hidden) closeTuner(); p.hidden = !p.hidden; $('#metroBtn').setAttribute('aria-pressed', !p.hidden); metroUI(); };
 document.addEventListener('pointerdown', (e) => {
   const p = $('#metroPop'); if (!p.hidden && !p.contains(e.target) && !$('#metroBtn').contains(e.target)) { p.hidden = true; $('#metroBtn').setAttribute('aria-pressed', false); }
 });
@@ -1157,24 +1668,28 @@ function loadProjectMetro(p) {
 function showTab(name) {
   $$('.tabs [data-tab]').forEach((b) => b.setAttribute('aria-selected', b.dataset.tab === name));
   $$('.tpane').forEach((p) => (p.hidden = p.dataset.pane !== name));
-  LS.set('tab', name);
+  LS.set('tab3', name);
 }
 $('.tabs').onclick = (e) => { const b = e.target.closest('[data-tab]'); if (b) showTab(b.dataset.tab); };
-showTab(LS.get('tab', 'notes'));
+{ const t0 = LS.get('tab3', 'snips'); showTab(['snips', 'notes', 'takes'].includes(t0) ? t0 : 'snips'); }
 const grow = () => { const t = $('#noteText'); t.style.height = 'auto'; t.style.height = Math.min(160, t.scrollHeight) + 'px'; };
 $('#noteText').addEventListener('input', grow);
 
 /* ---------------- Takes (recordings) ---------------- */
-async function renderTakes() {
-  const p = S.p; const ul = $('#takes');
+function snipName(id) { for (const v of S.p.videos) for (const s of v.snippets || []) if (s.id === id) return s.name; return null; }
+function renderTakes() {
+  const p = S.p;
   $('#cTakes').textContent = p.recordings.length || '';
-  if (!p.recordings.length) { ul.innerHTML = '<li class="hintline">Record yourself to hear how it’s coming along. Takes are saved in this project.</li>'; return; }
-  const items = [...p.recordings].sort((a, b) => b.createdAt - a.createdAt);
+  return fillTakes($('#takes'), p.recordings, 'Record yourself to hear how it’s coming along. Takes are saved in this project.');
+}
+async function fillTakes(ul, recs, emptyText) {
+  if (!recs.length) { ul.innerHTML = `<li class="hintline">${emptyText}</li>`; return; }
+  const items = [...recs].sort((a, b) => b.createdAt - a.createdAt);
   ul.innerHTML = items.map((r) => `
     <li class="take" data-id="${r.id}">
       <div class="meta"><input type="text" value="${esc(r.name)}" aria-label="Take name" data-rename="${r.id}"><span class="mono muted" style="font-size:12px">${fmtTime(r.duration)}</span></div>
       <div data-media></div>
-      <div class="foot"><span>${r.kind === 'video' ? 'Video · ' : ''}${dateFmt.format(r.createdAt)}</span>
+      <div class="foot"><span>${r.snippetId && snipName(r.snippetId) && ul.id === 'takes' ? esc(snipName(r.snippetId)) + ' · ' : ''}${r.kind === 'video' ? 'Video · ' : ''}${dateFmt.format(r.createdAt)}</span>
         <span><a class="linkish" style="opacity:1" data-dl="${r.id}">Save file</a><button class="linkish" style="opacity:1" data-del="${r.id}">Delete</button></span></div>
     </li>`).join('');
   for (const r of items) {
@@ -1185,20 +1700,24 @@ async function renderTakes() {
   }
 }
 function extFor(m) { return /mp4/.test(m) ? (/audio/.test(m) ? 'm4a' : 'mp4') : /ogg/.test(m) ? 'ogg' : 'webm'; }
-$('#takes').addEventListener('change', (e) => {
-  const id = e.target.dataset.rename; if (!id) return;
-  const r = S.p.recordings.find((x) => x.id === id); r.name = e.target.value.trim() || r.name; saveProject(S.p);
-});
-$('#takes').addEventListener('click', async (e) => {
-  const b = e.target.closest('[data-del]'); if (!b) return;
-  if (!await confirmBox('Delete this take?', 'The recording is removed from this device.')) return;
-  const r = S.p.recordings.find((x) => x.id === b.dataset.del);
-  S.p.recordings = S.p.recordings.filter((x) => x !== r);
-  await DB.del('blobs', r.blobId); await saveProject(S.p); renderTakes();
-});
+function bindTakes(root) {
+  root.addEventListener('change', (e) => {
+    const id = e.target.dataset.rename; if (!id) return;
+    const r = S.p.recordings.find((x) => x.id === id); r.name = e.target.value.trim() || r.name; saveProject(S.p);
+  });
+  root.addEventListener('click', async (e) => {
+    const b = e.target.closest('.take [data-del]'); if (!b) return;
+    e.stopPropagation();
+    if (!await confirmBox('Delete this take?', 'The recording is removed from this device.')) return;
+    const r = S.p.recordings.find((x) => x.id === b.dataset.del);
+    S.p.recordings = S.p.recordings.filter((x) => x !== r);
+    await DB.del('blobs', r.blobId); await saveProject(S.p); renderTakes(); if (S.detail) renderDetail();
+  }, true);
+}
+bindTakes($('#takes')); bindTakes($('#snipDetail'));
 
 /* recorder */
-const R = { startedMetro: false, kind: 'audio', stream: null, rec: null, chunks: [], t0: 0, timer: null, blob: null, mime: '', dur: 0, ac: null, raf: 0 };
+const R = { snipId: null, startedMetro: false, kind: 'audio', stream: null, rec: null, chunks: [], t0: 0, timer: null, blob: null, mime: '', dur: 0, ac: null, raf: 0 };
 function pickMime(kind) {
   const c = kind === 'video' ? ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'] : ['audio/mp4', 'audio/webm;codecs=opus', 'audio/webm'];
   if (!window.MediaRecorder) return null;
@@ -1217,11 +1736,15 @@ function recReset() {
   $('#recErr').hidden = true; $('#recHint').hidden = false;
   $$('.seg button').forEach((b) => (b.disabled = false));
 }
-function openRecorder() {
+function openRecorder(snipId) {
   if (!navigator.mediaDevices || !window.MediaRecorder) { toast('Recording isn’t supported in this browser'); return; }
-  recReset(); $('#recorder').showModal();
+  recReset();
+  R.snipId = typeof snipId === 'string' && findSnip(snipId) ? snipId : null;
+  $('#recTitle').textContent = R.snipId ? 'Record: ' + findSnip(R.snipId).name : 'Record a take';
+  $('#recLoopWrap').hidden = !R.snipId; $('#recLoopSnip').checked = LS.get('recLoopSnip', false);
+  $('#recorder').showModal();
 }
-$('#recBtn').onclick = $('#recBtn2').onclick = openRecorder;
+$('#recBtn').onclick = $('#recBtn2').onclick = () => openRecorder(null);
 $('#recAudio').onclick = () => { R.kind = 'audio'; $('#recAudio').setAttribute('aria-pressed', true); $('#recVideo').setAttribute('aria-pressed', false); };
 $('#recVideo').onclick = () => { R.kind = 'video'; $('#recVideo').setAttribute('aria-pressed', true); $('#recAudio').setAttribute('aria-pressed', false); };
 $('#recStart').onclick = async () => {
@@ -1271,11 +1794,14 @@ $('#recStart').onclick = async () => {
     R.stream.getTracks().forEach((t) => t.stop()); cancelAnimationFrame(R.raf); $('#recMeter').style.width = '0';
     $('#recPreview').hidden = true;
     const u = URL.createObjectURL(R.blob);
-    const name = (R.kind === 'video' ? 'Video take ' : 'Take ') + dayFmt.format(new Date()) + ', ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const when = dayFmt.format(new Date()) + ', ' + new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+    const sn = R.snipId && findSnip(R.snipId);
+    const name = sn ? `${sn.name} · ${when}` : (R.kind === 'video' ? 'Video take ' : 'Take ') + when;
     $('#recReview').innerHTML = (R.kind === 'video' ? `<video controls playsinline src="${u}"></video>` : `<audio controls src="${u}" style="width:100%"></audio>`)
       + `<label class="field" style="text-align:left">Name<input type="text" id="recName" value="${esc(name)}"></label>`;
     $('#recReview').hidden = false; $('#recSave').hidden = false; $('#recDiscard').hidden = false; $('#recStop').hidden = true;
   };
+  if (R.snipId) { LS.set('recLoopSnip', $('#recLoopSnip').checked); if ($('#recLoopSnip').checked && findSnip(R.snipId)) playSnip(findSnip(R.snipId)); }
   R.rec.start(1000);
   R.t0 = Date.now(); $('#recClock').classList.add('live'); $('#recHint').hidden = true;
   R.timer = setInterval(() => { R.dur = (Date.now() - R.t0) / 1000; $('#recClock').textContent = fmtTime(R.dur); }, 250);
@@ -1289,9 +1815,11 @@ $('#recSave').onclick = async () => {
   $('#recSave').disabled = true;
   try {
     await putFile(blobId, R.blob, 'take');
-    S.p.recordings.push({ id, blobId, kind: R.kind, mime: R.mime, duration: R.dur, createdAt: Date.now(), name: ($('#recName').value || 'Take').trim() });
+    const rec = { id, blobId, kind: R.kind, mime: R.mime, duration: R.dur, createdAt: Date.now(), name: ($('#recName').value || 'Take').trim() };
+    if (R.snipId) rec.snippetId = R.snipId;
+    S.p.recordings.push(rec);
     await saveProject(S.p); askPersist();
-    $('#recorder').close(); renderTakes(); toast('Take saved');
+    $('#recorder').close(); renderTakes(); if (S.detail) renderDetail(); toast(R.snipId ? 'Attempt saved' : 'Take saved');
   } catch (e) { $('#recErr').textContent = 'Couldn’t save the take: ' + e.message; $('#recErr').hidden = false; }
   $('#recSave').disabled = false;
 };
@@ -1301,16 +1829,17 @@ $('#recorder').addEventListener('close', () => recReset());
    Wizard (create + edit)
    ========================================================= */
 const STEPS = ['Name', 'Instruments', 'Videos', 'Sheet music'];
-const W = { step: 0, editing: false, d: null, files: new Map(), removedBlobs: [] };
+const W = { step: 0, editing: false, d: null, files: new Map(), removedBlobs: [], coverFile: null, coverUrl: null };
 function openWizard(project, step) {
   W.editing = !!project; W.files = new Map(); W.removedBlobs = [];
-  W.d = project ? JSON.parse(JSON.stringify({ id: project.id, name: project.name, instruments: project.instruments || [], videos: project.videos, sheets: project.sheets }))
+  W.coverFile = null; if (W.coverUrl) URL.revokeObjectURL(W.coverUrl); W.coverUrl = null;
+  W.d = project ? JSON.parse(JSON.stringify({ id: project.id, name: project.name, instruments: project.instruments || [], videos: project.videos, sheets: project.sheets, cover: project.cover || null }))
     : { id: uid(), name: '', instruments: [], videos: [], sheets: [] };
   $('#wizTitle').textContent = project ? 'Edit project' : 'New project';
   $('#wName').value = W.d.name; $('#wNameErr').hidden = true;
   ['#wVidUrl', '#wVidLabel', '#wLinkUrl', '#wLinkLabel', '#wInstrCustom'].forEach((s) => ($(s).value = ''));
   $('#wVidErr').hidden = true; $('#wDelete').hidden = !project;
-  renderInstr(); renderWVids(); renderWSheets();
+  renderInstr(); renderWVids(); renderWSheets(); renderCovers();
   $('#wizard').showModal(); goStep(step || 0);
 }
 function goStep(n) {
@@ -1328,6 +1857,40 @@ function nameOk() {
   $('#wNameErr').hidden = !!W.d.name;
   if (!W.d.name) { goStep(0); return false; } return true;
 }
+async function renderCovers() {
+  const wrap = $('#wCoverWrap'); wrap.hidden = !W.editing; if (!W.editing) return;
+  const d = W.d, cur = coverOf(d), sel = (o) => (o.yt && cur && cur.yt === o.yt) || (o.blob && cur && cur.blob === o.blob) || (o.none && !cur);
+  const opts = [
+    ...d.videos.map((v) => ({ yt: v.ytId, label: v.label || v.title || 'Video' })),
+    ...d.sheets.filter((s) => s.kind === 'image' && !W.files.has(s.blobId)).map((s) => ({ blob: s.blobId, label: s.label || 'Image' })),
+    ...(d.cover && d.cover.custom ? [{ blob: d.cover.blobId, label: 'Your photo', custom: true }] : [])
+  ];
+  $('#wCovers').innerHTML = opts.map((o, i) => `<button type="button" data-c="${i}" aria-pressed="${sel(o)}" aria-label="Use ${esc(o.label)} as cover">${o.yt ? `<img src="${ytThumb(o.yt)}" alt="" onerror="this.remove()">` : `<img ${o.custom && W.coverUrl ? `src="${W.coverUrl}"` : `data-blob="${esc(o.blob)}"`} alt="">`}</button>`).join('')
+    + `<label for="wCoverFile" title="Upload a photo, e.g. an album cover"><span><svg class="i"><use href="#i-upload"/></svg><br>Photo</span></label>`
+    + `<button type="button" data-c="none" aria-pressed="${sel({ none: true })}" style="--h:${hue(d.name || 'x')};background:linear-gradient(135deg,hsl(var(--h) 55% 42%),hsl(calc(var(--h) + 40) 45% 22%));color:#fff;font-size:22px;font-weight:800">${esc(((d.name || '').trim()[0] || '♪').toUpperCase())}</button>`;
+  W.coverOpts = opts;
+  fillBlobImgs($('#wCovers'));
+}
+$('#wCovers').onclick = (e) => {
+  const b = e.target.closest('[data-c]'); if (!b) return;
+  if (b.dataset.c === 'none') W.d.cover = { type: 'none' };
+  else { const o = W.coverOpts[+b.dataset.c]; W.d.cover = o.yt ? { type: 'yt', ytId: o.yt } : { type: 'blob', blobId: o.blob, custom: !!o.custom }; }
+  renderCovers();
+};
+// A photo you pick is cropped to a square and shrunk, so covers stay small.
+$('#wCoverFile').onchange = async (e) => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return;
+  try {
+    const bmp = await createImageBitmap(f);
+    const side = Math.min(bmp.width, bmp.height), N = 360, c = document.createElement('canvas'); c.width = c.height = N;
+    c.getContext('2d').drawImage(bmp, (bmp.width - side) / 2, (bmp.height - side) / 2, side, side, 0, 0, N, N);
+    W.coverFile = await new Promise((r) => c.toBlob(r, 'image/jpeg', 0.86));
+    if (W.coverUrl) URL.revokeObjectURL(W.coverUrl); W.coverUrl = URL.createObjectURL(W.coverFile);
+    W.d.cover = { type: 'blob', blobId: 'cover-' + uid(), custom: true };
+    renderCovers();
+  } catch { toast('That picture couldn’t be opened. Try a JPG or PNG.'); }
+};
+$('#wName').addEventListener('input', () => { if (W.editing) { const b = $('#wCovers [data-c="none"]'); if (b) b.textContent = (($('#wName').value || '').trim()[0] || '♪').toUpperCase(); } });
 $('#wizSteps').onclick = (e) => { const b = e.target.closest('[data-go]'); if (!b) return; if (+b.dataset.go > 0 && !nameOk()) return; goStep(+b.dataset.go); };
 $('#wNext').onclick = () => { if (W.step === 0 && !nameOk()) return; if (W.step === 2) addWVid(true); goStep(W.step + 1); };
 $('#wBack').onclick = () => goStep(W.step - 1);
@@ -1352,7 +1915,7 @@ function addWVid(silent) {
   const id = ytId(url);
   if (!id) { if (!silent) $('#wVidErr').hidden = false; return false; }
   $('#wVidErr').hidden = true;
-  W.d.videos.push({ id: uid(), url, ytId: id, label: $('#wVidLabel').value.trim(), title: '', rate: null, bookmarks: [], loop: {} });
+  W.d.videos.push({ id: uid(), url, ytId: id, label: $('#wVidLabel').value.trim(), title: '', rate: null, snippets: [], loop: {} });
   $('#wVidUrl').value = ''; $('#wVidLabel').value = ''; renderWVids(); return true;
 }
 function renderWVids() {
@@ -1462,7 +2025,10 @@ $('#wSave').onclick = async () => {
     let p;
     if (W.editing) {
       p = S.p && S.p.id === W.d.id ? S.p : await DB.get('projects', W.d.id);
-      Object.assign(p, { name: W.d.name, instruments: W.d.instruments, videos: W.d.videos, sheets: W.d.sheets });
+      const old = p.cover;
+      if (W.coverFile && W.d.cover && W.d.cover.custom) await putFile(W.d.cover.blobId, W.coverFile, 'cover.jpg');
+      if (old && old.custom && (!W.d.cover || W.d.cover.blobId !== old.blobId)) await DB.del('blobs', old.blobId);
+      Object.assign(p, { name: W.d.name, instruments: W.d.instruments, videos: W.d.videos, sheets: W.d.sheets, cover: W.d.cover || null });
     } else {
       p = { ...W.d, comments: [], recordings: [], totalSeconds: 0, createdAt: Date.now(), lastOpened: 0, ui: { v: 0, s: 0 } };
     }
@@ -1473,7 +2039,7 @@ $('#wSave').onclick = async () => {
       if (W.step === 2) S.vIdx = Math.max(0, p.videos.length - 1);
       if (W.step === 3) S.sIdx = Math.max(0, p.sheets.length - 1);
       S.vIdx = Math.min(S.vIdx, Math.max(0, p.videos.length - 1)); S.sIdx = Math.min(S.sIdx, Math.max(0, p.sheets.length - 1));
-      p.ui = { v: S.vIdx, s: S.sIdx };
+      p.ui = Object.assign(p.ui || {}, { v: S.vIdx, s: S.sIdx }); setupTuner(p);
       S.pdfDoc = null; renderHeader(); renderVideoPanel(); renderSheetPanel(); toast('Project updated');
     } else {
       location.hash = 'p-' + p.id;
@@ -1485,6 +2051,7 @@ $('#wDelete').onclick = async () => {
   if (!await confirmBox('Delete “' + W.d.name + '”?', 'Its notes, uploaded sheets and recorded takes are removed from this device.')) return;
   const p = await DB.get('projects', W.d.id);
   for (const s of p.sheets) if (s.blobId) await DB.del('blobs', s.blobId);
+  if (p.cover && p.cover.custom) await DB.del('blobs', p.cover.blobId);
   for (const r of p.recordings) await DB.del('blobs', r.blobId);
   await DB.del('projects', p.id);
   stopTimer(false); S.p = null; releaseUrls();

@@ -1,5 +1,5 @@
 // Woodshed service worker: app shell offline, libraries and fonts cached on first use.
-const VERSION = 'woodshed-v3';
+const VERSION = 'woodshed-v5';
 const SHELL = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const SHELL = [
   './icons/icon-512.png',
   './icons/apple-touch-icon.png'
 ];
-const RUNTIME_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
+const RUNTIME_HOSTS = ['cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'i.ytimg.com'];
 
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));

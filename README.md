@@ -35,6 +35,11 @@ On iPad, launch from the home-screen icon: Apple can clear storage for websites 
 - PDFs render with PDF.js, loaded the first time you open a PDF and cached for offline use.
 - Playback speed is saved per video, and your last-used speed becomes the default for new videos.
 - **Pasting images:** copy a picture of tab or sheet music (long-press it → Copy, or take a screenshot and tap Copy), then tap the paste button in the sheet panel, or press Ctrl+V on Windows. JPG and PNG both work; PNG keeps thin tab lines sharper.
+- **Project covers:** each project shows its first video's YouTube thumbnail in your list. To pick a different picture, tap **Edit** in the project: under **Cover** you can choose another video, an uploaded image, a photo of your own (such as an album cover), or a plain letter tile.
+- **Snippets** (version 3) replace bookmarks. Mark a section with **A** and **B** on the video, name it, and tap **Save loop**. Each snippet remembers its own speed. Tap a snippet to loop it; tap **Whole song** to play straight through. Double-tap or hold a snippet (or right-click on Windows) to open it: fine-tune its start and end, rate it 1–10 (red to green, with a history line over days), add time-stamped notes, and record attempts. Older bookmarks become snippets automatically.
+- **Keyboard:** Space plays and pauses the video; the left and right arrow keys jump 5 seconds (hold Shift for 1 second). If you've just tapped inside the YouTube player itself, YouTube's own keys take over, which do the same thing.
+- **Tuner:** appears in the top bar when a project's instruments include guitar, bass, fiddle/violin, mandolin, ukulele, banjo or cello. Tap **Listen** to tune with the microphone, or tap a string to hear its reference note (A = 440 Hz).
+- **Night mode for sheet music:** PDFs and images show as white on black by default. The moon button in the sheet music bar switches back to black on white.
 - Typing `[1:23]` in a note (or tapping **Insert video time**) makes a tag that jumps the video to that moment.
 - Tap the timer to pause it. Practice time is added to the project's total.
 - The side panel (video, notes, bookmarks, takes) can be hidden with the panel button at the top right so the sheet music fills the screen. The video keeps playing while it's hidden.
