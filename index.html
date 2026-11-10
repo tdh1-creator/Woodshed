@@ -324,11 +324,16 @@ input[type=range]{accent-color:var(--accent);width:100%}
 .tnote{font:800 52px/1 var(--f);letter-spacing:-.02em;transition:color .15s}
 .tnote sub{font-size:18px;font-weight:600;color:var(--muted);vertical-align:baseline;margin-left:2px}
 .tsub{font-size:13px;color:var(--muted);min-height:18px}
-.needle{position:relative;width:100%;height:22px;border-radius:999px;background:var(--raise);overflow:hidden}
-.needle .mid{position:absolute;left:50%;top:3px;bottom:3px;width:2px;margin-left:-1px;background:var(--dim)}
-.needle i{position:absolute;top:3px;bottom:3px;left:50%;width:6px;margin-left:-3px;border-radius:3px;background:var(--muted);transition:left .12s linear,background .15s;opacity:0}
+.needle{position:relative;width:100%;height:38px;border-radius:10px;background:var(--raise);overflow:hidden;transition:box-shadow .2s}
+.needle .zone{position:absolute;left:45%;width:10%;top:0;bottom:0;background:hsl(120 50% 45% / .16)}
+.needle .tick{position:absolute;top:12px;bottom:12px;width:1px;background:var(--line)}
+.needle .mid{position:absolute;left:50%;top:6px;bottom:6px;width:2px;margin-left:-1px;background:var(--muted)}
+.needle i{position:absolute;top:4px;bottom:4px;left:50%;width:8px;margin-left:-4px;border-radius:4px;background:var(--muted);transition:left .12s linear,background .15s;opacity:0}
 .needle.live i{opacity:1}
-.tscale{display:flex;justify-content:space-between;width:100%;font-size:10px;color:var(--dim)}
+.needle.ok{box-shadow:inset 0 0 0 2px hsl(120 60% 45%)}
+.tscale{display:flex;justify-content:space-between;width:100%;font-size:11px;color:var(--dim);font-weight:600}
+.tlevel{width:100%;height:3px;border-radius:2px;background:var(--raise);overflow:hidden;margin-top:2px}
+.tlevel i{display:block;height:100%;width:0;background:var(--muted);transition:width .08s linear}
 .tstrings{display:flex;gap:5px;justify-content:center;flex-wrap:wrap}
 .tstrings button{width:42px;height:42px;padding:0;border-radius:50%;border:0;background:var(--raise);cursor:pointer;font-weight:700;font-size:14px;color:var(--ink)}
 .tstrings button sub{font-size:9px;color:var(--dim);font-weight:500}
@@ -447,8 +452,13 @@ input[type=range]{accent-color:var(--accent);width:100%}
     <div class="tread">
       <div class="tnote" id="tNote">–</div>
       <div class="tsub" id="tSub">Tap Listen, then play one string</div>
-      <div class="needle" aria-hidden="true"><span class="mid"></span><i id="tNeedle"></i></div>
-      <div class="tscale mono" aria-hidden="true"><span>−50</span><span>0</span><span>+50</span></div>
+      <div class="needle" id="tTrack" aria-hidden="true">
+        <span class="zone"></span>
+        <span class="tick" style="left:25%"></span><span class="tick" style="left:40%"></span><span class="tick" style="left:60%"></span><span class="tick" style="left:75%"></span>
+        <span class="mid"></span><i id="tNeedle"></i>
+      </div>
+      <div class="tscale" aria-hidden="true"><span>♭ Flat</span><span>Sharp ♯</span></div>
+      <div class="tlevel" title="Microphone level" aria-hidden="true"><i id="tLevel"></i></div>
     </div>
     <div class="tstrings" id="tStrings"></div>
     <div class="metro-row">
@@ -1425,7 +1435,7 @@ $('#tStrings').onclick = (e) => { const b = e.target.closest('[data-i]'); if (b)
 function detectPitch(x, sr) {
   const W = 2048, minLag = Math.floor(sr / 1400), maxLag = Math.min(Math.floor(sr / 35), x.length - W - 1);
   let rms = 0; for (let i = 0; i < W; i++) rms += x[i] * x[i]; rms = Math.sqrt(rms / W);
-  if (rms < 0.008) return null;
+  if (rms < 0.004) return null;
   const d = new Float32Array(maxLag + 1);
   for (let tau = 1; tau <= maxLag; tau++) { let sum = 0; for (let j = 0; j < W; j++) { const v = x[j] - x[j + tau]; sum += v * v; } d[tau] = sum; }
   let run = 0, best = -1; const cm = new Float32Array(maxLag + 1); cm[0] = 1;
@@ -1433,14 +1443,46 @@ function detectPitch(x, sr) {
   for (let tau = minLag; tau <= maxLag; tau++) {
     if (cm[tau] < 0.15) { while (tau + 1 <= maxLag && cm[tau + 1] < cm[tau]) tau++; best = tau; break; }
   }
-  if (best < 0) return null;
+  if (best < 0) {
+    // No clear dip below the strict threshold: accept the deepest dip if it is reasonably clear.
+    let mv = 1; for (let tau = minLag; tau <= maxLag; tau++) if (cm[tau] < mv) { mv = cm[tau]; best = tau; }
+    if (mv > 0.35) return null;
+  }
   const a = cm[best - 1] ?? cm[best], b = cm[best], c = cm[best + 1] ?? cm[best];
   const shift = (a - 2 * b + c) ? (a - c) / (2 * (a - 2 * b + c)) : 0;
   return sr / (best + shift);
 }
+// Refine YIN's estimate by finding the exact peak of the fundamental (Hann-windowed Goertzel scan, ±50 cents).
+// Real strings' overtones run slightly sharp, which pulls a period-based estimate sharp; this corrects for it.
+let hannN = 0, hann = null;
+function refinePitch(x, sr, f) {
+  const N = x.length;
+  if (hannN !== N) { hann = new Float32Array(N); for (let i = 0; i < N; i++) hann[i] = 0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (N - 1)); hannN = N; }
+  const K = 15, step = 0.002, mags = [];
+  for (let k = -K; k <= K; k++) {
+    const w = (2 * Math.PI * f * (1 + k * step)) / sr, cw = 2 * Math.cos(w);
+    let s1 = 0, s2 = 0;
+    for (let i = 0; i < N; i++) { const s0 = x[i] * hann[i] + cw * s1 - s2; s2 = s1; s1 = s0; }
+    mags.push(Math.log(1e-12 + s1 * s1 + s2 * s2 - cw * s1 * s2));
+  }
+  let bi = 0; for (let i = 1; i < mags.length; i++) if (mags[i] > mags[bi]) bi = i;
+  if (bi === 0 || bi === mags.length - 1) return f;
+  const a = mags[bi - 1], b = mags[bi], c = mags[bi + 1], den = a - 2 * b + c;
+  const off = den ? (0.5 * (a - c)) / den : 0;
+  return f * (1 + (bi - K + off) * step);
+}
 function tunerFrame() {
-  T.an.getFloatTimeDomainData(T.buf);
-  const f = detectPitch(T.buf, T.ac.sampleRate);
+  if (T.an.getFloatTimeDomainData) T.an.getFloatTimeDomainData(T.buf);
+  else { T.an.getByteTimeDomainData(T.bbuf); for (let i = 0; i < T.buf.length; i++) T.buf[i] = (T.bbuf[i] - 128) / 128; }
+  let pk = 0; for (let i = 0; i < T.buf.length; i += 4) { const v = Math.abs(T.buf[i]); if (v > pk) pk = v; }
+  $('#tLevel').style.width = Math.min(100, pk * 250) + '%';
+  if (pk > 0.003) T.heard = true;
+  if (!T.heard && Date.now() - T.startedAt > 3000) {
+    $('#tSub').textContent = 'Not hearing anything. Check the microphone is allowed, then tap Stop and Listen again.';
+    return;
+  }
+  let f = detectPitch(T.buf, T.ac.sampleRate);
+  if (f) f = refinePitch(T.buf, T.ac.sampleRate, f);
   if (f) { T.hist.push(f); if (T.hist.length > 5) T.hist.shift(); T.lastSeen = Date.now(); }
   else if (Date.now() - T.lastSeen > 700) { T.hist = []; }
   showPitch(T.hist.length >= 2 ? [...T.hist].sort((p, q) => p - q)[T.hist.length >> 1] : null);
@@ -1448,6 +1490,7 @@ function tunerFrame() {
 function showPitch(f) {
   const needle = $('.needle'), dot = $('#tNeedle');
   $$('#tStrings button').forEach((b) => b.classList.remove('near'));
+  needle.classList.remove('ok');
   if (!f) { needle.classList.remove('live'); if (T.stream) { $('#tNote').innerHTML = '–'; $('#tNote').style.color = ''; $('#tSub').textContent = 'Listening… play one string'; } return; }
   const midi = 69 + 12 * Math.log2(f / 440);
   const strings = TUNINGS[T.key].notes.map(noteMidi);
@@ -1460,30 +1503,41 @@ function showPitch(f) {
   const col = Math.abs(cents) <= 5 ? 'hsl(120 60% 50%)' : Math.abs(cents) <= 15 ? 'var(--accent)' : 'var(--rec)';
   $('#tNote').innerHTML = `${nm}<sub>${oct}</sub>`; $('#tNote').style.color = col;
   $('#tSub').textContent = Math.abs(cents) <= 5 ? 'In tune' : `${Math.abs(cents)} cents ${cents < 0 ? 'flat · tune up' : 'sharp · tune down'}`;
-  needle.classList.add('live'); dot.style.background = col;
+  needle.classList.add('live'); needle.classList.toggle('ok', Math.abs(cents) <= 5); dot.style.background = col;
   dot.style.left = 50 + Math.max(-50, Math.min(50, cents)) + '%';
 }
 async function startListening() {
   $('#tErr').hidden = true;
+  // Start the audio engine inside the tap itself; iPad won't start it later.
+  const ac = tunerCtx();
   try {
     T.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
   } catch (err) {
     $('#tErr').textContent = err && err.name === 'NotAllowedError' ? 'Woodshed needs the microphone to hear your instrument. Allow it in the browser’s site settings, or use the reference tones.' : 'Couldn’t start the microphone. Use the reference tones instead.';
     $('#tErr').hidden = false; return;
   }
-  const ac = tunerCtx();
-  T.an = ac.createAnalyser(); T.an.fftSize = 4096; T.buf = new Float32Array(T.an.fftSize);
+  // Turning on the microphone can pause the audio engine on iPad, so wake it again.
+  try { if (ac.state !== 'running') await ac.resume(); } catch {}
+  ac.onstatechange = () => { if (T.stream && ac.state !== 'running') ac.resume().catch(() => {}); };
+  T.an = ac.createAnalyser(); T.an.fftSize = 8192; T.an.smoothingTimeConstant = 0;
+  T.buf = new Float32Array(T.an.fftSize); T.bbuf = new Uint8Array(T.an.fftSize);
   T.src = ac.createMediaStreamSource(T.stream); T.src.connect(T.an);
-  T.hist = []; clearInterval(T.timer); T.timer = setInterval(tunerFrame, 66);
+  // Safari only processes sound that leads to the speakers, so route it there at zero volume.
+  T.sink = ac.createGain(); T.sink.gain.value = 0; T.an.connect(T.sink); T.sink.connect(ac.destination);
+  T.hist = []; T.heard = false; T.startedAt = Date.now();
+  clearInterval(T.timer); T.timer = setInterval(tunerFrame, 66);
   $('#tListen').textContent = 'Stop'; $('#tunerBtn').classList.add('running'); $('#tSub').textContent = 'Listening… play one string';
 }
 function stopListening() {
   clearInterval(T.timer); T.timer = 0;
   if (T.stream) T.stream.getTracks().forEach((t) => t.stop());
   try { T.src && T.src.disconnect(); } catch {}
-  T.stream = null; T.src = null; T.hist = [];
+  try { T.sink && T.sink.disconnect(); } catch {}
+  if (T.ac) T.ac.onstatechange = null;
+  T.stream = null; T.src = null; T.sink = null; T.hist = [];
+  $('#tLevel').style.width = '0';
   $('#tListen').textContent = 'Listen'; $('#tunerBtn').classList.remove('running');
-  $('.needle').classList.remove('live'); $('#tNote').innerHTML = '–'; $('#tNote').style.color = ''; $('#tSub').textContent = 'Tap Listen, then play one string';
+  $('.needle').classList.remove('live', 'ok'); $('#tNote').innerHTML = '–'; $('#tNote').style.color = ''; $('#tSub').textContent = 'Tap Listen, then play one string';
   $$('#tStrings button').forEach((b) => b.classList.remove('near'));
 }
 $('#tListen').onclick = () => (T.stream ? stopListening() : startListening());
@@ -1804,7 +1858,9 @@ $('#recStart').onclick = async () => {
   // level meter
   try {
     R.ac = new (window.AudioContext || window.webkitAudioContext)();
+    if (R.ac.state !== 'running') R.ac.resume().catch(() => {});
     const an = R.ac.createAnalyser(); an.fftSize = 512; R.ac.createMediaStreamSource(R.stream).connect(an);
+    const sink = R.ac.createGain(); sink.gain.value = 0; an.connect(sink); sink.connect(R.ac.destination);
     const buf = new Uint8Array(an.fftSize);
     const loop = () => { an.getByteTimeDomainData(buf); let pk = 0; for (const v of buf) pk = Math.max(pk, Math.abs(v - 128)); $('#recMeter').style.width = Math.min(100, pk / 1.1) + '%'; R.raf = requestAnimationFrame(loop); };
     loop();
