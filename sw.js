@@ -1,5 +1,5 @@
 // Woodshed service worker: app shell offline, libraries and fonts cached on first use.
-const VERSION = 'woodshed-v5';
+const VERSION = 'woodshed-v6';
 const SHELL = [
   './',
   './index.html',

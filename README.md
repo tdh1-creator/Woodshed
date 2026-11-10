@@ -26,6 +26,8 @@ The app must be served over **https** (or `http://localhost` for testing). Openi
 - **iPad (Chrome, iPadOS 16.4+):** open the address, tap the Share button, then **Add to Home Screen**. (Safari works the same way.) Launch it from the home-screen icon from then on.
 
 ## Where your data lives
+Woodshed shows a gentle reminder on the home screen when your projects have changed and haven't been backed up: right away the first time, then when the last backup is a week old. **Later** hides it for three days. On iPad, **Back up** opens the share sheet: tap **Save to Files** and pick iCloud Drive or On My iPad.
+
 Everything is stored in the browser on that device (IndexedDB). Projects don't sync between your iPad and PC. Use **Back up** on the home screen now and then; **Restore** loads a backup on any device.
 
 On iPad, launch from the home-screen icon: Apple can clear storage for websites you haven't visited in a while, but home-screen apps are exempt.
