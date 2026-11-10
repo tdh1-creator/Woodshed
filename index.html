@@ -738,25 +738,50 @@ window.addEventListener('error', (e) => { if (e.error || e.message) reportError(
 window.addEventListener('unhandledrejection', (e) => reportError(e.reason || e));
 
 /* ---------------- IndexedDB ---------------- */
+// iPad closes the storage connection while the app is in the background (for example while you
+// pick a file in the Files app). Every read and write therefore reconnects and retries once if needed.
 const DB = {
-  db: null,
+  db: null, opening: null,
   open() {
-    return new Promise((res, rej) => {
+    if (this.db) return Promise.resolve(this.db);
+    if (this.opening) return this.opening;
+    this.opening = new Promise((res, rej) => {
       const r = indexedDB.open('woodshed', 1);
       r.onupgradeneeded = () => {
         const d = r.result;
         if (!d.objectStoreNames.contains('projects')) d.createObjectStore('projects', { keyPath: 'id' });
         if (!d.objectStoreNames.contains('blobs')) d.createObjectStore('blobs', { keyPath: 'id' });
       };
-      r.onsuccess = () => { this.db = r.result; res(); };
-      r.onerror = () => rej(r.error);
+      r.onsuccess = () => {
+        const d = r.result;
+        d.onclose = () => { if (this.db === d) this.db = null; };
+        d.onversionchange = () => { try { d.close(); } catch {} if (this.db === d) this.db = null; };
+        this.db = d; this.opening = null; res(d);
+      };
+      r.onerror = () => { this.opening = null; rej(r.error); };
+      r.onblocked = () => { this.opening = null; rej(new Error('storage is busy in another Woodshed window; close it and try again')); };
+    });
+    return this.opening;
+  },
+  lost(e) { return !!e && (e.name === 'InvalidStateError' || e.name === 'UnknownError' || e.name === 'AbortError' || /clos|connection|lost|server/i.test(e.message || '')); },
+  once(store, mode, fn) {
+    return new Promise((res, rej) => {
+      let t, q;
+      try { t = this.db.transaction(store, mode); q = fn(t.objectStore(store)); } catch (e) { rej(e); return; }
+      t.oncomplete = () => res(q && q.result);
+      t.onerror = () => rej(t.error || new Error('storage error'));
+      t.onabort = () => rej(t.error || Object.assign(new Error('storage connection lost'), { name: 'AbortError' }));
     });
   },
-  run(store, mode, fn) {
-    return new Promise((res, rej) => {
-      const t = this.db.transaction(store, mode); const q = fn(t.objectStore(store));
-      t.oncomplete = () => res(q && q.result); t.onerror = () => rej(t.error); t.onabort = () => rej(t.error);
-    });
+  async run(store, mode, fn) {
+    await this.open();
+    try { return await this.once(store, mode, fn); }
+    catch (e) {
+      if (!this.lost(e)) throw e;
+      try { this.db && this.db.close(); } catch {}
+      this.db = null; await this.open();
+      return this.once(store, mode, fn);
+    }
   },
   all(s) { return this.run(s, 'readonly', (st) => st.getAll()); },
   get(s, id) { return this.run(s, 'readonly', (st) => st.get(id)); },
@@ -1016,7 +1041,10 @@ $('#timerBtn').onclick = () => {
   $('#timerBtn').classList.toggle('paused', S.paused); tick();
 };
 window.addEventListener('pagehide', () => { if (S.p) { persistTime(); } });
-document.addEventListener('visibilitychange', () => { if (document.hidden && S.p) persistTime(); });
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { if (S.p) persistTime(); return; }
+  DB.all('projects').catch(() => {}); // wakes the storage connection after the app was in the background
+});
 
 /* ---------------- Video panel ---------------- */
 const curVideo = () => S.p && S.p.videos[S.vIdx];
@@ -2212,6 +2240,7 @@ $('#importFile').onchange = async (e) => {
   try {
     const data = JSON.parse(await f.text());
     if (data.app !== 'woodshed') throw new Error('this isn’t a Woodshed backup');
+    toast('Restoring…');
     for (const b of data.blobs) await DB.put('blobs', { id: b.id, type: b.type, name: b.name, buf: b64ToBuf(b.data) });
     for (const p of data.projects) await DB.put('projects', p);
     await loadProjects(); renderHome(); toast(`Restored ${data.projects.length} project${data.projects.length === 1 ? '' : 's'}`);
