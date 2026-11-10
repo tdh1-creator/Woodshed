@@ -87,6 +87,12 @@ label.field,div.field{display:grid;gap:6px;font-weight:700;font-size:13px}
 .proj .sub{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .proj .when,.proj .tot{color:var(--muted);font-size:13px}
 @media (max-width:560px){.list-head,.proj{grid-template-columns:48px minmax(0,1fr) auto}.list-head span:nth-child(3),.proj .when{display:none}.home-top input{width:140px}}
+.backup-nudge{display:flex;align-items:center;gap:12px;padding:12px 12px 12px 14px;margin-bottom:16px;border-radius:10px;background:var(--raise);flex-wrap:wrap}
+.backup-nudge > svg{color:var(--accent);width:22px;height:22px;flex:none}
+.bn-text{flex:1 1 220px;min-width:0;display:grid;gap:1px;font-size:13px}
+.bn-text b{font-size:14px}
+.bn-text span{color:var(--muted)}
+.bn-actions{display:flex;gap:6px;margin-left:auto}
 .empty{padding:48px 0;display:grid;gap:14px;justify-items:start}
 .empty h2{font-size:24px;margin:0;font-weight:700}
 .empty p{margin:0;max-width:46ch;color:var(--muted)}
@@ -351,6 +357,7 @@ input[type=range]{accent-color:var(--accent);width:100%}
   <symbol id="i-metro" viewBox="0 0 24 24"><path d="M9 3h6l4 18H5L9 3zM12 16l5-9M8 16h8"/></symbol>
   <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
   <symbol id="i-logo" viewBox="0 0 32 32"><path fill-rule="evenodd" fill="currentColor" stroke="none" d="M14.7 3.1a2 2 0 012.6 0l9.6 8.3a2 2 0 01.7 1.5V27a2 2 0 01-2 2H5.4a2 2 0 01-2-2V12.9a2 2 0 01.7-1.5zM16 12.7a7.5 7.5 0 100 15 7.5 7.5 0 000-15zm0 .5a7 7 0 110 14 7 7 0 010-14zM16 15a5.2 5.2 0 100 10.4A5.2 5.2 0 0016 15z"/><path fill="currentColor" stroke="none" d="M14.13 14.6h.45v11.2h-.45zM15.23 14.6h.45v11.2h-.45zM16.33 14.6h.45v11.2h-.45zM17.43 14.6h.45v11.2h-.45z"/></symbol>
+  <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l7 3v6c0 4.5-3 7.8-7 9-4-1.2-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
   <symbol id="i-fork" viewBox="0 0 24 24"><path d="M9 3v7a3 3 0 006 0V3M12 13v8"/></symbol>
   <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z"/></symbol>
   <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
@@ -371,6 +378,14 @@ input[type=range]{accent-color:var(--accent);width:100%}
     <div class="home-title">
       <h1>Your projects</h1>
       <p id="homeSub"></p>
+    </div>
+    <div class="backup-nudge" id="backupNudge" role="status" hidden>
+      <svg class="i" aria-hidden="true"><use href="#i-shield"/></svg>
+      <div class="bn-text"><b id="bnTitle"></b><span id="bnSub"></span></div>
+      <div class="bn-actions">
+        <button class="btn sm" id="bnLater">Later</button>
+        <button class="btn sm primary" id="bnNow">Back up now</button>
+      </div>
     </div>
     <div class="list-head" id="listHead"><span></span><span>Title</span><span>Last opened</span><span>Practiced</span></div>
     <section class="ledger" id="ledger" aria-label="Projects"></section>
@@ -841,15 +856,40 @@ function renderHome() {
     </button>`;
   }).join('') || (n ? `<p class="muted" style="padding:12px">No project matches “${esc(q)}”.</p>` : '');
   fillBlobImgs($('#ledger'));
-  updateStorageLine();
+  updateStorageLine(); renderBackupNudge();
 }
 async function updateStorageLine() {
+  const last = LS.get('lastBackup', 0);
+  const lb = last ? `Last backup ${relDay(last).toLowerCase() === 'today' ? 'today' : dayFmt.format(last)}` : 'Not backed up yet';
+  $('#storageLine').textContent = `Saved on this device · ${lb}`;
   try {
-    const e = await navigator.storage.estimate();
-    const mb = (e.usage / 1048576);
-    $('#storageLine').textContent = `Saved on this device · ${mb < 1 ? '<1' : mb.toFixed(0)} MB used`;
+    const e = await navigator.storage.estimate(); const mb = e.usage / 1048576;
+    $('#storageLine').textContent = `Saved on this device · ${mb < 1 ? '<1' : mb.toFixed(0)} MB · ${lb}`;
   } catch {}
 }
+
+/* ---------------- Gentle backup reminder ---------------- */
+// Shows on the home screen when projects have changed since the last backup:
+// right away if you've never backed up, otherwise once the last backup is a week old.
+// "Later" hides it for three days.
+function renderBackupNudge() {
+  const el = $('#backupNudge');
+  const n = S.projects.length;
+  const last = LS.get('lastBackup', 0), snooze = LS.get('backupSnooze', 0);
+  const changed = S.projects.reduce((m, p) => Math.max(m, p.updatedAt || 0), 0);
+  const days = last ? Math.floor((Date.now() - last) / 864e5) : null;
+  const due = n > 0 && changed > last && Date.now() > snooze && (!last || days >= 7);
+  el.hidden = !due; if (!due) return;
+  if (!last) {
+    $('#bnTitle').textContent = 'Keep a backup of your projects';
+    $('#bnSub').textContent = 'They live only on this device. Closing a private tab or clearing the browser would erase them.';
+  } else {
+    $('#bnTitle').textContent = `Last backup was ${days} days ago`;
+    $('#bnSub').textContent = 'You’ve practiced since then. Save a fresh copy to your Files.';
+  }
+}
+$('#bnLater').onclick = () => { LS.set('backupSnooze', Date.now() + 3 * 864e5); renderBackupNudge(); };
+$('#bnNow').onclick = () => $('#exportBtn').click();
 $('#ledger').addEventListener('click', (e) => { const b = e.target.closest('.proj'); if (b) location.hash = 'p-' + b.dataset.id; });
 $('#projSearch').addEventListener('input', renderHome);
 $('#newProjBtn').onclick = $('#newProjBtn2').onclick = () => openWizard(null, 0);
@@ -2067,13 +2107,28 @@ function bufToB64(buf) {
   return btoa(s);
 }
 function b64ToBuf(b64) { const s = atob(b64); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b.buffer; }
+function backupDone() { LS.set('lastBackup', Date.now()); LS.set('backupSnooze', 0); updateStorageLine(); renderBackupNudge(); }
 $('#exportBtn').onclick = async () => {
+  const btns = [$('#exportBtn'), $('#bnNow')]; btns.forEach((b) => (b.disabled = true));
   toast('Preparing backup…');
-  const projects = await DB.all('projects'); const blobs = await DB.all('blobs');
-  const data = { app: 'woodshed', version: 1, exportedAt: new Date().toISOString(), projects, blobs: blobs.map((b) => ({ id: b.id, type: b.type, name: b.name, data: bufToB64(b.buf) })) };
-  const url = URL.createObjectURL(new Blob([JSON.stringify(data)], { type: 'application/json' }));
-  const a = document.createElement('a'); a.href = url; a.download = `woodshed-backup-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 5000);
+  try {
+    const projects = await DB.all('projects'); const blobs = await DB.all('blobs');
+    const data = { app: 'woodshed', version: 1, exportedAt: new Date().toISOString(), projects, blobs: blobs.map((b) => ({ id: b.id, type: b.type, name: b.name, data: bufToB64(b.buf) })) };
+    const name = `woodshed-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    const file = new File([JSON.stringify(data)], name, { type: 'application/json' });
+    // On iPad and iPhone the share sheet is the reliable way to save a file ("Save to Files").
+    const touch = matchMedia('(pointer:coarse)').matches;
+    if (touch && navigator.canShare && navigator.canShare({ files: [file] })) {
+      try { await navigator.share({ files: [file], title: 'Woodshed backup' }); backupDone(); toast('Backup saved'); }
+      catch (err) { if (err && err.name === 'AbortError') toast('Backup not saved'); else throw err; }
+    } else {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a'); a.href = url; a.download = name;
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 10000);
+      backupDone(); toast('Backup saved to Downloads');
+    }
+  } catch (err) { toast('Backup failed: ' + (err && err.message || err)); }
+  btns.forEach((b) => (b.disabled = false));
 };
 $('#importFile').onchange = async (e) => {
   const f = e.target.files[0]; e.target.value = ''; if (!f) return;
