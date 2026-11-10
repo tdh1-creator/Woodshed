@@ -723,6 +723,20 @@ function confirmBox(msg, sub = '', yes = 'Delete') {
   });
 }
 
+/* ---------------- Problems are shown, not swallowed ---------------- */
+let lastErrAt = 0;
+function reportError(e) {
+  const msg = (e && (e.message || e.reason && e.reason.message || e.name)) || String(e);
+  if (/^Script error\.?$/.test(msg) || /ResizeObserver/.test(msg)) return; // other sites' scripts (YouTube)
+  try { console.error(e); } catch {}
+  if (Date.now() - lastErrAt < 1500) return; lastErrAt = Date.now();
+  const t = $('#toast'); t.textContent = 'Something went wrong: ' + msg + '. Please tell Claude this message.'; t.hidden = false;
+  clearTimeout(toast._t); toast._t = setTimeout(() => (t.hidden = true), 9000);
+}
+function safely(fn) { try { const r = fn(); if (r && r.catch) r.catch(reportError); } catch (e) { reportError(e); } }
+window.addEventListener('error', (e) => { if (e.error || e.message) reportError(e.error || e); });
+window.addEventListener('unhandledrejection', (e) => reportError(e.reason || e));
+
 /* ---------------- IndexedDB ---------------- */
 const DB = {
   db: null,
@@ -900,7 +914,11 @@ function renderBackupNudge() {
 }
 $('#bnLater').onclick = () => { LS.set('backupSnooze', Date.now() + 3 * 864e5); renderBackupNudge(); };
 $('#bnNow').onclick = () => $('#exportBtn').click();
-$('#ledger').addEventListener('click', (e) => { const b = e.target.closest('.proj'); if (b) location.hash = 'p-' + b.dataset.id; });
+$('#ledger').addEventListener('click', (e) => {
+  const b = e.target.closest('.proj'); if (!b) return;
+  const h = '#p-' + b.dataset.id;
+  if (location.hash === h) route(); else location.hash = h; // same address fires no change event, so open it directly
+});
 $('#projSearch').addEventListener('input', renderHome);
 $('#newProjBtn').onclick = $('#newProjBtn2').onclick = () => openWizard(null, 0);
 
@@ -908,16 +926,18 @@ $('#newProjBtn').onclick = $('#newProjBtn2').onclick = () => openWizard(null, 0)
    Routing
    ========================================================= */
 async function route() {
-  const m = location.hash.match(/^#p-(.+)$/);
-  if (m) {
-    const p = await DB.get('projects', decodeURIComponent(m[1]));
-    if (p) return openProject(p);
-    location.hash = '';
-  }
-  await closeProject();
-  await loadProjects();
-  $('#project').hidden = true; $('#home').hidden = false;
-  renderHome();
+  try {
+    const m = location.hash.match(/^#p-(.+)$/);
+    if (m) {
+      const p = await DB.get('projects', decodeURIComponent(m[1]));
+      if (p) return await openProject(p);
+      history.replaceState(null, '', location.pathname + location.search);
+    }
+    try { await closeProject(); } catch (e) { reportError(e); S.p = null; }
+    await loadProjects();
+    $('#project').hidden = true; $('#home').hidden = false;
+    renderHome();
+  } catch (e) { reportError(e); }
 }
 window.addEventListener('hashchange', route);
 
@@ -925,21 +945,22 @@ window.addEventListener('hashchange', route);
    Project view
    ========================================================= */
 async function openProject(p) {
-  if (S.p && S.p.id !== p.id) await closeProject();
+  if (S.p && S.p.id !== p.id) { try { await closeProject(); } catch (e) { reportError(e); S.p = null; } }
+  $('#home').hidden = true; $('#project').hidden = false;
   const fresh = !S.p;
   S.p = p;
   p.ui = p.ui || { v: 0, s: 0 };
-  migrateSnippets(p);
-  $('#home').hidden = true; $('#project').hidden = false;
+  p.videos = p.videos || []; p.sheets = p.sheets || []; p.comments = p.comments || []; p.recordings = p.recordings || [];
+  safely(() => migrateSnippets(p));
   if (fresh) {
-    p.lastOpened = Date.now(); await saveProject(p);
-    startTimer(); window.scrollTo(0, 0);
+    p.lastOpened = Date.now(); saveProject(p).catch(reportError);
+    safely(startTimer); window.scrollTo(0, 0);
   }
-  renderHeader();
+  safely(renderHeader);
   S.vIdx = Math.min(p.ui.v || 0, Math.max(0, p.videos.length - 1));
   S.sIdx = Math.min(p.ui.s || 0, Math.max(0, p.sheets.length - 1));
   if (fresh) { S.snip = null; S.detail = null; }
-  renderVideoPanel(); renderSheetPanel(); renderNotes(); renderTakes(); loadProjectMetro(p); setupTuner(p);
+  [renderVideoPanel, renderSheetPanel, renderNotes, renderTakes, () => loadProjectMetro(p), () => setupTuner(p)].forEach(safely);
 }
 async function closeProject() {
   if (!S.p) return;
